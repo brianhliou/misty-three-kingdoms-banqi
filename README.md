@@ -17,10 +17,10 @@ written for [Mistboard](https://mistboard.com), which hosts banqi and its varian
 
 ## Rules
 
-The rules the engine plays are Mistboard's. The mode comes from a mobile banqi app that publishes
-no rules text for it, so the open questions (what a chase limit does, whether a capture resets the
-clock, and so on) were decided from observed play and written down; this project is not affiliated
-with that app.
+The rules the engine plays are Mistboard's. The mode comes from Gamesofa's mobile app 神來也暗棋2
+(2026), which publishes no rules text for it, so the open questions (what a chase limit does,
+whether a capture resets the clock, and so on) were decided from observed play and written down.
+This project is not affiliated with Gamesofa.
 
 - **Board.** Nine files (a to i) by five ranks (1 to 5). The 32 pieces start face-down in four 4x2
   blocks at the corners; file e and rank 3 start empty.
