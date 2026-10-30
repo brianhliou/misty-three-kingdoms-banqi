@@ -1,7 +1,7 @@
 # MistyThreeKingdomsBanqi
 
-[![ci](https://github.com/brianhliou/misty-three-kingdoms/actions/workflows/ci.yml/badge.svg)](https://github.com/brianhliou/misty-three-kingdoms/actions/workflows/ci.yml)
-[![release](https://img.shields.io/github/v/release/brianhliou/misty-three-kingdoms)](https://github.com/brianhliou/misty-three-kingdoms/releases/latest)
+[![ci](https://github.com/brianhliou/misty-three-kingdoms-banqi/actions/workflows/ci.yml/badge.svg)](https://github.com/brianhliou/misty-three-kingdoms-banqi/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/brianhliou/misty-three-kingdoms-banqi)](https://github.com/brianhliou/misty-three-kingdoms-banqi/releases/latest)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 An engine for **Three Kingdoms banqi** (三國暗棋) in Rust: αβ search with **Star1 chance-node
