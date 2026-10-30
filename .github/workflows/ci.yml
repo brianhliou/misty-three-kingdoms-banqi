@@ -1,0 +1,25 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust (stable, minimal)
+        run: rustup toolchain install stable --profile minimal --no-self-update
+      - name: Build the UCI binary
+        run: cargo build --release --bin three-kingdoms-engine
+      - name: Run tests
+        # Release mode: the engine-vs-reference equality test searches 100+ positions at three
+        # budgets and takes minutes in a debug build. The oracle replay reads its fixture with
+        # python3 (standard library only), which ubuntu-latest has.
+        run: cargo test --release
+      - name: UCI smoke test
+        run: |
+          echo "uci" | ./target/release/three-kingdoms-engine | grep -q "id name MistyThreeKingdomsBanqi"
+          printf 'position startpos\ngo nodes 2000\nquit\n' | ./target/release/three-kingdoms-engine | grep -q "^bestmove [a-i][1-5][a-i][1-5]$"
+          echo "OK: engine self-reports, responds to uci, and returns a bestmove"

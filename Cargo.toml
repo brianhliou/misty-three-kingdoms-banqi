@@ -1,0 +1,10 @@
+# Workspace: the engine crate (`three_kingdoms_banqi_rust`), which holds the rules,
+# the search, the UCI contract and the standalone `three-kingdoms-engine` binary.
+# No dependencies.
+[workspace]
+members = ["three_kingdoms_banqi_rust"]
+resolver = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1

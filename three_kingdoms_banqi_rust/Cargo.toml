@@ -1,0 +1,17 @@
+[package]
+name = "three_kingdoms_banqi_rust"
+version = "0.1.0"
+edition = "2021"
+authors = ["Brian Liou"]
+description = "MistyThreeKingdomsBanqi: Three Kingdoms banqi (三國暗棋) engine, alpha-beta + Star1 chance-node search, with a UCI binary."
+license = "MIT"
+repository = "https://github.com/brianhliou/misty-three-kingdoms"
+publish = false
+
+[lib]
+name = "three_kingdoms_banqi_rust"
+crate-type = ["rlib"]
+
+[[bin]]
+name = "three-kingdoms-engine"
+path = "src/bin/three-kingdoms-engine.rs"
