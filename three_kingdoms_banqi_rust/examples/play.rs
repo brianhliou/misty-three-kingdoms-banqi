@@ -1,6 +1,7 @@
 //! Play the engine's level in a terminal.
 //!
 //! cargo run --release --example play -- [--seat red|black] [--seed N]
+//!     [--chance-mix] [--eval-file <path>]
 //!
 //! Enter moves as `e3e4`; flip a covered tile with `e3e3` (or just `e3`).
 //! The deal is shuffled from the seed; the bot sees only what the frontend
@@ -68,13 +69,32 @@ fn show(state: &State) {
 fn main() {
     let mut seat = Seat::Red;
     let mut seed = 1u64;
+    let mut session = Session::default();
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
-        match (a.as_str(), args.next()) {
-            ("--seat", Some(v)) if v == "black" => seat = Seat::Black,
-            ("--seat", Some(_)) => seat = Seat::Red,
-            ("--seed", Some(v)) => seed = v.parse().expect("--seed N"),
-            _ => panic!("usage: play [--seat red|black] [--seed N]"),
+        match a.as_str() {
+            "--seat" => {
+                seat = match args.next().as_deref() {
+                    Some("red") => Seat::Red,
+                    Some("black") => Seat::Black,
+                    _ => panic!("--seat red|black"),
+                };
+            }
+            "--seed" => seed = args.next().expect("--seed N").parse().expect("--seed N"),
+            "--chance-mix" => {
+                session.handle("setoption name ChanceMix value true");
+            }
+            "--eval-file" => {
+                let path = args.next().expect("--eval-file <path>");
+                let errors = session.handle(&format!("setoption name EvalFile value {path}"));
+                if !errors.is_empty() {
+                    eprintln!("{}", errors.join("\n"));
+                    std::process::exit(1);
+                }
+            }
+            _ => panic!(
+                "usage: play [--seat red|black] [--seed N] [--chance-mix] [--eval-file <path>]"
+            ),
         }
     }
     let identities = deal(seed);
@@ -119,7 +139,6 @@ fn main() {
                 command.push_str(" moves ");
                 command.push_str(&window.join(" "));
             }
-            let mut session = Session::default();
             session.handle(&command);
             let reply = session.handle("go");
             println!("bot: {}", reply[0]);

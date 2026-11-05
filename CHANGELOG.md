@@ -2,6 +2,18 @@
 
 All notable changes to MistyThreeKingdomsBanqi.
 
+## [0.2.0]
+
+- Optional ChanceMix search (`setoption name ChanceMix value true`, default off):
+  probe every possible flip identity at reduced depth, then search the most probable
+  identity at full depth and combine the results by their public bag probabilities.
+- Optional NNUE evaluation (`setoption name EvalFile value <path>`) reads TKNN v1
+  files; evaluation stays classical when unset. No net ships with the engine.
+  Clearing the option restores classical evaluation; invalid files also report load errors through UCI.
+- UCI binary `three-kingdoms-engine` reports `id name MistyThreeKingdomsBanqi 0.2.0`.
+  Tests cover both options, generated nets, fixed UCI fixtures and the original
+  node-for-node equality check against the frozen reference with default options.
+
 ## [0.1.0]
 
 - Initial standalone engine for Three Kingdoms banqi (三國暗棋): αβ + **Star1 chance-node**

@@ -21,6 +21,8 @@
 //! TypeScript kernel and needs only python3's standard JSON reader, no Node.
 
 pub mod engine;
+pub mod features;
+pub mod nnue;
 pub mod reference;
 pub mod uci;
 

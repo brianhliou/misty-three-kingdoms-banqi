@@ -1,0 +1,201 @@
+# v0.1.0 d314fdb; nodes=5000, movetime=0, default depth/q/TT; command<TAB>bestmove<TAB>score_cp<TAB>depth<TAB>nodes
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XsXX1XecX/XXXX1XhXS/9/XHXX1CXXX/XXXX1rXXX r r 0 0 0 5 G1A2E2R2H1C1S4g1a2e1r1h1c1s4 h5h5 moves b2d3 g5e3 i4i3	g4f2	101	1	5000
+position fen XsSh1secX/Xs1X1XhX1/2GH4S/X1Xs1CXXX/XaXX1rSXA r r 0 0 0 12 A1E2R2H1C1S2g1a1e1r1c1s1 b1b1 moves	a1a1	-1	0	5000
+position fen Xs1h1secS/CHSX1X1X1/1G6h/X1X1sCRX1/XaHX1rSXr b r 5 10 0 17 A1E2R1S1g1a1e1c1s1 a4a4 moves	a1a1	36	0	5000
+position fen XG1h1sec1/C1gX1E1XS/3H2A1h/X3sCR2/SaHX1rSXr r r 10 15 0 23 E1R1a1e1c1s1 f4f4 moves	i4i3	52	1	5000
+position fen s5ec1/C1gX1hR1S/6A1h/XGs2CRE1/SaHXHrSXr b r 15 15 0 28 E1a1e1c1 a5a5 moves	c2b2	190	1	5000
+position fen s1H3e2/g2X1ER1S/6A1h/X1G2CRc1/Sa1cHrSar r r 30 25 0 33 E1e1 h1h1 moves f2e2 h2h3	c5a4	38	2	5000
+position fen s5e2/1g1X2hcS/9/X2HCARE1/SaGcHrSar r r 30 40 0 39 E1e1 i3g4 moves e1f3	h1g2	111	2	5000
+position fen s5e1S/2eX3c1/H4g3/2h1C1RE1/S1G1Arcar r r 35 55 0 45 E1 b3f3 moves	g2g1	-224	3	5000
+position fen s7r/3X3c1/4hg3/e4C1E1/SHG1ArRa1 r r 50 60 0 49 E1 i2i5 moves f2d2 i5b5 g1g4	e3g4	263	3	5000
+position fen s7r/3X3c1/4hg3/e4C1E1/SHG1ArRa1 r r 50 60 0 49 E1 i2i5 moves f2d2 i5b5 g1g4 b5e5 g4g3 f1g1 c1c4 h1g2 d2b2 g2h1 b2g2 e5i5 g3h3 f3g3	h3g3	-168	4	5000
+position fen s8/3E5/7R1/e1Gc2C2/1S2Ahrar r r 70 75 0 61 - h2d2 moves b1b2	g1g2	104	4	5000
+position fen s8/3E5/7R1/e1Gc2C2/1S2Ahrar r r 70 75 0 61 - h2d2 moves b1b2 h1i2 b2b1 f1e3 g2g5 g1h1 c2b2 a2c4 h3h2 d2d3 g5e5 e3f1	h2i2	-11	3	5000
+position fen s8/2hE5/7ac/4G2R1/1S2A2rr r r 75 85 0 71 - e3c4 moves e1f2 c4e5 e2e1	h1e1	1000	1	2
+position fen s6a1/3E2h2/6A2/7R1/1S1G1r2r b r 85 85 0 77 - f2g3 moves i1h1	d1f1	1000	1	2
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen HasX1XGXA/XXcX1XXXs/9/XXXX1XRXE/XXXX1XXer b r 0 0 0 6 A1E1R1H1C2S5g1a1e1r1h2c1s3 a5a5 moves	i1i2	51	1	5000
+position fen 1asX1SGXA/aXcE1XXCs/1H7/XXXr1XRSE/XXAS1XXer r r 0 0 0 11 R1H1C1S2g1e1h2c1s3 h2h2 moves b3a5 d2d3	h4h3	-3	1	5000
+position fen 1a3SGXA/HXcs1XXCs/8r/XSX2XR1E/XSAS1XX1S b r 25 20 0 17 H1C1g1e1h2c1s3 c5a4 moves	b5a4	59	1	5000
+position fen 1a2HSGXA/cX1s1X1Cs/1r4s2/CSX3R1E/cSA1SXX1S r r 25 30 0 23 g1e1h2s2 a2a2 moves	b2b3	8	1	5000
+position fen ca2HSGhA/1X1s1X1Cs/1r4s2/CSs3R1E/S1A1SXs1S b r 35 30 0 26 g1e1h1 g1g1 moves b3c3 c1d2 c3c5 b2b1	g1g2	61	2	5000
+position fen ca2HSGhA/1ers1X1Cs/6s2/C2s2R1E/SS2SXs1S r r 35 35 0 30 g1h1 c2d2 moves h4h1 h5i3 e5d3 a5a4 b1c1 a4a5 g2h2 g3h3	h1h3	-43	2	5000
+position fen ca3gGhA/1er1s1s2/2C4s1/3s1HR1E/S1S1SXsCS r r 35 40 0 39 h1 f4f5 moves f2d1	f5g5	257	3	5000
+position fen 1a2sgGhA/1er3sC1/5Cs2/2S1c1R1E/S2s1Xs1S r r 35 55 0 44 h1 a2e2 moves c2b2 g3h3	g5f5	-174	3	5000
+position fen 1a2s1Gh1/1e5A1/2C2g1s1/1S6S/S3sXs2 b r 65 85 0 50 h1 i1i2 moves	f3c3	295	3	5000
+position fen 4s2G1/1ea4A1/5Cg2/SS6s/4sXs2 r r 75 90 0 54 h1 i3i2 moves h5f5 e1d1 f3f2 g3b3	f5e5	-86	5	5000
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XXRX1XrXX/r1XX1XXsX/3H5/HXEX1SXXX/XXXX1XeXX r b 0 0 0 6 G1A2E1R1C2S4g1a2e1h2c2s4 h4h4 moves h4h3	c2a4	151	1	5000
+position fen RXRX1X1rX/r1XX1sA1X/3Hh2s1/HXEX1S1GX/XgSX1XeXX b b 5 0 0 11 E1C2S3a2e1h1c2s3 g5h5 moves f2f3	a1a1	41	0	5000
+position fen rXRX1X1S1/2eX1SA1X/3Hh4/HXEX3ss/XgSX1ceCX b b 40 20 0 17 E1C1S2a2h1c1s2 h3h2 moves	h1f1	-91	1	5000
+position fen 1XRX1X1S1/r1eX1S2S/3H3A1/sahX2s1s/1gScc1eCX b b 55 20 0 22 E1C1S1a1h1s1 a1a2 moves h5i5	d1d3	358	1	5000
+position fen 1X1R1X2S/rhes1SA1S/3H5/sa1h2ss1/1gScC1e1X r b 55 35 0 27 E1C1S1 c5d5 moves d2b3 d5c5 a4a3	c1b1	-107	2	5000
+position fen 1CR2X2S/2e2SA1S/r1Cs5/sah3ss1/1g1SH1e1E r b 55 55 0 34 S1 i1i1 moves	b1d1	41	3	5000
+position fen 1CR2X2S/2e2SA1S/r1Cs5/sah3ss1/1g1SH1e1E r b 55 55 0 34 S1 i1i1 moves c4e2 c3c4 g1i3 g4h5 a3b3 c4a4 d3c3 a4a3 b3b4 f4e4 b2c1	b5b1	130	3	5000
+position fen 1CR2S1AS/1r2S4/C1s5S/s1h1e1ss1/1gaSH3E b b 55 60 0 40 - f5f5 moves e4f4 e2g4 e1f3 b1a1 f5g5 g4e2 d1e1 b4b1 i3i2	c2a3	36	3	5000
+position fen 1rR3SA1/3H1S2S/Cs6S/s3e1s2/g1a1h2sE b b 70 60 0 48 - c2e1 moves c5c3 e2g4 i3i2 g2g3	a3a1	97	3	5000
+position fen 6SAS/3H2S2/1sr3E2/8S/g1a1h2s1 b b 95 75 0 54 - a3b3 moves i5i4 e1f3 d4e2	f3g5	1000	1	2
+position fen 6SAS/3H2S2/1sr3E2/8S/g1a1h2s1 b b 95 75 0 54 - a3b3 moves i5i4 e1f3 d4e2 h1g1 i2i1 g1g2 i1i2 a1a2 e2f4 b3a3 g5f5 g2h2 g3e1 a2b2	e1c3	-1000	1	37
+position fen 5S1A1/2r2HS1S/1s3h3/1g5S1/2a1E4 r b 95 80 0 64 - i2h2 moves b2b1 f4d3 b3a3 d3e5 c4d4 i4h4	f3e5	1000	1	2
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen eXXX1XXXX/SX1X1XXXX/1s7/XXXX1GSHh/XXXX1XgSX b b 0 0 0 6 A2E2R2H1C2S2a2e1r2h1c2s4 h1h1 moves	h1g1	187	1	5000
+position fen SXXX1XCcX/1r1s1XXXX/2s6/aAeX1GgHh/XXXE1X1SX r b 5 5 0 12 A1E1R2H1C1S2a1r1h1c1s3 b2b2 moves	g2f2	147	1	5000
+position fen 1XXX1XCcX/Srss1XEXX/A8/a1eh1G1H1/aXXE1s1SH b b 5 35 0 17 A1R2C1S2r1c1s2 d2d2 moves	f2d2	385	1	5000
+position fen 1XcC1sCcX/S1ss1XEXA/Ar4h2/a1eG5/aXXE1H1SH b b 5 40 0 22 R2S2r1s1 d5d5 moves f1h2	h5h2	-284	1	5000
+position fen 1Xcs1sCcX/1S1s1REXA/A4rh2/3G2eH1/aXRE3S1 b b 25 45 0 28 S2r1s1 e4g2 moves	f4f3	341	1	5000
+position fen 1S1s2scS/1S3REXA/A1c1sr3/G6H1/aXRE1h1S1 r b 35 50 0 34 r1s1 b5b5 moves	f3f4	-87	2	5000
+position fen 1Ss3scS/1S5XA/A1cs1R3/1G2E1rH1/1sRE1h1S1 b b 35 55 0 39 r1 b1b1 moves	f3f1	181	3	5000
+position fen 1Ss3scS/1S5XA/AER2H3/1G2E1r2/1s3h1S1 r b 50 70 0 42 r1 h2f3 moves g5g4 b5a5 h5f5 f3d4 f5d5 b4c4	b1b2	-41	4	5000
+position fen Ssc5S/2SH2EXA/AE1R2r2/2G6/1s5S1 r b 50 85 0 50 r1 b2c2 moves g3g1	h1g1	1000	1	2
+position fen Ssc5S/2SH2EXA/AE1R2r2/2G6/1s5S1 r b 50 85 0 50 r1 b2c2 moves g3g1 d3e3 g1f1 i4h5 f1f3 b3d1 b1c1 i5i4 c5f5 c4c3 f3h3 d4b3	h3e3	-197	4	5000
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen g1sX1XXXX/XXSX1XXXX/9/XXXX1GsXh/XXXa1RXXS b r 0 5 0 6 A2E1R1H2C2S3a1e2r2h1c2s3 c4c4 moves	g2f2	187	1	5000
+position fen g1sX1XsRX/HSrX1XhXX/6h2/XX1X1GsX1/XXXR2XXS b r 5 10 0 11 A2E1H1C2S2a1e2r1c2s2 g5g5 moves a5b5	a1a1	-48	0	5000
+position fen 2sX1c1sX/HgrXHX1XX/9/XX3hsXS/sXr2RXX1 b r 15 50 0 17 A2E1C2S2a1e2c1s1 f5f5 moves	c1f1	481	1	5000
+position fen 2sX1c1sC/1grXHXhXa/2H5S/XA4sX1/sXr2RXX1 b r 15 50 0 21 A1E1C1S2e2c1s1 b2b2 moves c1e1 e4d2 e1e2	b1b1	-330	0	5000
+position fen 2sX3sc/g1rX1Eh1a/2H4SS/XA1r1es2/sX3RXX1 r r 15 70 0 28 A1C1S1e1c1s1 f4f4 moves c3b5	d2b2	573	1	5000
+position fen 2sXh2s1/g1rX1E2c/A1H4aS/X4As2/sX5e1 r r 35 90 0 34 C1S1c1s1 h1h1 moves	c3d1	-580	3	5000
+position fen 2sS3s1/gA1c2h1c/7S1/X2EHA3/sX4se1 b r 55 90 0 38 C1s1 d5d5 moves h5g5 e2g3	g4f2	1000	2	127
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XXrX1EXXX/XcX2EXXX/3s2a2/XXXR1Xr1s/XXXX1XXXX b r 0 0 0 6 G1A2R1H2C2S5g1a1e2h2c1s3 b4b4 moves	d3d2	107	1	5000
+position fen XSrX1EXXX/XcX2EhXg/3H2r2/sXeR1X1as/Xs1X1AXXX r r 5 0 0 12 G1A1R1H1C2S4a1e1h1c1s1 a2a2 moves	b5c5	182	1	5000
+position fen Xr1ahEXXX/scR2E1g1/s7r/1XeR1X1as/XsHH1AXXX b r 5 10 0 17 G1A1C2S3e1h1c1 a4a4 moves	d5c4	202	1	5000
+position fen S1rahEXXX/sc1g5/s4r3/1XR1RX1Es/GsHH1ACAX b r 15 10 0 22 C1S2e1h1c1 h1h1 moves e5c4	c1d3	7	1	5000
+position fen 2ra3XX/Sch1R4/s2r3E1/1XRg1XAEs/GsHH1AC1X b r 30 10 0 27 C1S2e1c1 e3e4 moves c4e5 e4h4	c5c2	-32	1	5000
+position fen S2a3XX/1chr3R1/2R4E1/GX2AXAEs/1sHH3CX b r 70 10 0 33 C1S2e1c1 c2c3 moves b4b3	h4d4	741	2	5000
+position fen h2a3XX/3r3R1/3c1ARE1/GS3XAEs/1sHH2C1e r r 70 15 0 39 C1S1c1 i1i1 moves g3g4	d4g4	-536	2	5000
+position fen h2a3SX/3r1ERR1/6eE1/GS3XA1s/2sH4C r r 80 30 0 44 C1c1 b1c1 moves f4h2 c1b1	g4d4	1000	2	211
+position fen h5S1c/r6R1/3a2eE1/G1S2C1s1/1s1H1C1A1 b r 80 50 0 50 - i5i5 moves	a4h4	-186	4	5000
+position fen h4S2c/5R3/3a2eE1/G1r3Cs1/2sH1C1A1 r r 80 55 0 54 - c4c2 moves f5e5 d3c4 a2a1 c4b5	a1c1	286	3	5000
+position fen ha7/4SR3/6esc/r1s2C2A/1G1H1C3 r r 80 60 0 60 - h2h3 moves i2h1 b5a4 f1e1	a2a3	-210	4	5000
+position fen h8/a3SR3/7sc/r1s2C3/1G1He2A1 r r 80 70 0 62 - g3e1 moves f4f5 c2c3 e4d4 a4b5 f2c2 a2a4 f5g5 h3h2 d4d3 a4e4	d1c3	1000	4	4106
+position fen h3R4/2a6/2sS3s1/4cH3/3Ge2A1 b r 95 80 0 72 - f5e5 moves	c3d3	-1000	1	39
+position fen h3R4/2a6/2sS3s1/4cH3/3Ge2A1 b r 95 80 0 72 - f5e5 moves c3c2 e5d5 e1c3 d5d4 e2d2 d4e4 h3g3 d1a1 c4b3 a1g1 d2e2	e4e2	1000	1	2
+position fen h3R4/2a6/2sS3s1/4cH3/3Ge2A1 b r 95 80 0 72 - f5e5 moves c3c2 e5d5 e1c3 d5d4 e2d2 d4e4 h3g3 d1a1 c4b3 a1g1 d2e2 h1g2 c2c1 g1f1 c1c2 f2h3 c2d2 f1c1 b3c2 h3i1 a5c4 d3e3	e2e4	-1000	1	45
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XaXX1XRXG/XXsX1rXXX/9/SXXX1XXXX/XCXr1XEeX r b 0 0 0 6 A2E1R1H2C1S4g1a1e1h2c2s4 b1b1 moves h1f3	b1d1	45	1	5000
+position fen XaXs1CR1G/XAsC1rXXX/9/SXXe1XXRX/X1X2XEeX r b 0 35 0 12 A1E1H2S4g1a1h1c1s3 d5d5 moves	c4d4	-244	1	5000
+position fen SaAs1CR1G/XAsC2XXX/5r2E/SEXe1XX2/s1c2XhRS b b 0 40 0 17 H2S2g1a1s2 i1i1 moves	f1f1	379	0	5000
+position fen 1SAs1r1RG/XA1C2HsS/2s4RE/SEXe1HX2/s1c2g2S r b 10 55 0 23 S1a1s1 h4h4 moves	h4h5	-289	2	5000
+position fen S1A2r1RG/a2C2HsS/7RE/SsXe1HX2/s1cg4S b b 20 60 0 28 S1s1 b3b2 moves	h5f5	502	2	5000
+position fen S1A4rG/ae1g1C1s1/1s2H2RS/2X2s3/S1c3E1S r b 45 65 0 34 S1 a2a1 moves	h5i5	-77	4	5000
+position fen 1S7/ae1r1g1s1/s3H2RS/2X2s3/S3c1E1S b b 80 65 0 39 S1 c4d4 moves	h3h2	-209	4	5000
+position fen 7H1/aS3gs2/s6R1/2X2s2S/S2r2c1S b b 85 70 0 44 S1 c1g1 moves a1a2	g4h4	1000	4	1707
+position fen 7H1/aS3gs2/s6R1/2X2s2S/S2r2c1S b b 85 70 0 44 S1 c1g1 moves a1a2 f4f3 h3h1 a4b3 a2b2 b3a2 b4a4 d1d2 i2i3 g1d1 i1i2 g4g5	a4b4	-1000	5	4081
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen HXXc1XXXX/EGXC1XSXa/1g7/X1XX1XXrX/XXXX1XXSX b b 0 0 0 6 A2E1R2H1C1S3a1e2r1h2c1s5 h1h1 moves	b4b3	152	1	5000
+position fen 1ESc1AXXX/EGX2ASha/1H1C5/X1XX1cXrX/XeXC1XXSX b b 0 20 0 11 R2H1S2a1e1r1h1s5 f2f2 moves d3g3	a1a1	-189	0	5000
+position fen 1ES1rAXXh/EGX3Sha/1H4C2/X1X1c1XrX/Xes2XXSs b b 15 30 0 16 R2H1S2a1e1s3 d5e5 moves b3d2 b1d3	h1h2	284	1	5000
+position fen 1ES1r1R2/E1X1H1aha/3e2C2/X1X1c1X1X/XGs2XX1r b b 30 45 0 22 R1H1S2e1s3 h5g4 moves g3h3	c1b1	43	1	5000
+position fen 1ES1rh3/E1X3a2/2H4a1/s1R2RX1X/Xes2XX1r b b 60 55 0 28 H1S2e1s2 d3b1 moves	c2c1	10	1	5000
+position fen 1E1S1h3/E1e1H1a2/7a1/R3r1X1X/Xes2Xs1r b b 75 60 0 32 H1S2s1 e1e2 moves e4d2 f5h4 d2f3	h4f3	253	2	5000
+position fen 1E3S3/E1e4h1/5a1a1/7HX/Xes2Xs1r b b 95 75 0 39 H1S1s1 g2f3 moves	f5f4	-1000	3	924
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen scCS1GXXX/CXXR1XXXe/9/XXXX1XXhX/XXXs1XSXX b r 0 0 0 6 A2E2R1H2S3g1a2e1r2h1c1s3 i4i4 moves	a5a4	102	1	5000
+position fen scC1SGXXX/CXX2XXXe/3s5/1XX2XXhS/sXX1sESHX r r 0 20 0 12 A2E1R1H1S1g1a2e1r2h1c1s1 f1f1 moves	f1d3	-146	1	5000
+position fen scC1SGcXX/CXXs1XX1e/9/1rAa1XXRS/sa2sESHX b r 10 20 0 17 A1E1H1S1g1e1r1h1s1 h4h2 moves	a5a4	150	1	5000
+position fen scC1SGcHX/CsE1sXA1e/9/sr1a1XSRS/1a1AsESHe r r 10 20 0 22 g1r1h1 i1i1 moves f1d3 i1g3	f5g5	6	1	5000
+position fen sEC2Gc1X/CsE1sh2e/2e3HA1/1r2AXSR1/saa1s1SHS r r 20 25 0 28 g1r1 f4f4 moves h3i2	g5c5	98	2	5000
+position fen CEh2GcHr/C1s1s1A2/2e6/1r2AXeR1/saa2sSHS b r 25 35 0 33 g1 i5i5 moves i5i3	a5c5	24	3	5000
+position fen CEh3GH1/C2ss1A1e/2e5r/ar3XR2/s1a2ASHS b r 40 35 0 37 g1 d5g5 moves d4c4 g5d5 i3e3 d5d3	c5d3	181	3	5000
+position fen 1E7/3ss1A1e/3h2H1H/a2G1XR2/Cra2AS1S b r 65 45 0 44 g1 a5a1 moves e4e5	d2a2	159	3	5000
+position fen 1E4sH1/3s4e/3h1A2H/a2GAXR2/ar5SS r r 65 55 0 49 g1 b2a1 moves e2d1 b1c1 g2i2	d3e5	-51	3	5000
+position fen 1E4sH1/3s5/1A6H/a2G1ge1R/a1rAh2SS r r 65 55 0 55 - f2f2 moves d2e2 c1c2	b3c2	241	4	5000
+position fen 1E5s1/3s1rH2/1a7/6eSR/a2Ah3S r r 85 90 0 61 - a2b3 moves g4e3	f4f3	1000	3	335
+position fen 1E5s1/3s1rH2/1a7/6eSR/a2Ah3S r r 85 90 0 61 - a2b3 moves g4e3 b3c2 i1h1 e1f3 i2i1 c2b3 e3g4 h5g5 g4i5 g5h5 i5g4 h5g5	g4i3	-1000	3	339
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen SXGX1XXXX/XsXh1XXXA/9/XXXs1XrXa/XXXX1SXXX b r 0 0 0 5 A1E2R2H2C2S3g1a1e2r1h1c2s3 c5c5 moves d2e2 i4h3	i2h3	54	1	5000
+position fen SXGX2aXX/XsCh1cXX1/7e1/XCe1sXAXa/XhXX1SXRc r r 15 0 0 12 A1E2R1H2S3g1r1s3 c4c4 moves	h1i1	136	1	5000
+position fen SXGX2aEX/Xs2eCXX1/hh2sA1e1/X4X1sa/S1HX1SXRc b r 25 10 0 17 A1E1R1H1S2g1r1s2 h5h5 moves	b3c5	44	1	5000
+position fen hr1R1CaEX/XsG3XX1/h3sA1e1/X1e3Ssa/S1HsS1XRc b r 25 15 0 22 A1E1H1S1g1s1 b5b5 moves e3d3	a1b1	113	0	5000
+position fen hC4aEX/X5XX1/1s1Rs2e1/X1G1AS1sa/ShH1s1XRc b r 45 20 0 27 A1E1H1S1g1s1 c4c2 moves b1a3 c2c3	b3c3	-76	1	5000
+position fen Ch4aEX/X5SX1/2G2R1e1/Xs2sSs1a/S1H3XRc b r 60 25 0 33 A1E1H1g1s1 d3f3 moves b2c2	h1i1	318	1	5000
+position fen ChH2RaEX/5S1s1/2G2s1e1/A1s3s1a/S1H3XRc b r 60 30 0 38 E1g1 a2a2 moves g2h2 c3d3	h3f5	-79	3	5000
+position fen C1H1S1asX/9/hA1e5/2G1s2sa/S1H3XRc r r 65 50 0 45 E1g1 h4h5 moves	h1i1	173	3	5000
+position fen 3CS3s/2A2H3/h6a1/S1G1s2s1/2H3XRc b r 75 55 0 50 g1 d3f4 moves	a3c2	-126	4	5000
+position fen 4SC3/2h6/3H5/S1G3as1/3s2X1R r r 90 70 0 56 g1 f3g2 moves	c2c4	1000	1	2
+position fen 4SC3/2h6/3H5/S1G3as1/3s2X1R r r 90 70 0 56 g1 f3g2 moves d3c1 g2h3 i1i4 h2i2 f5f3 i2i3 c2e2 c4e3 i4i5 d1e1 e5e4	e3c4	-1000	3	250
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XcXX1aEXX/XXXE1XXXg/6s2/XsXA1h1XX/XXXX1cXXX b b 0 0 0 6 G1A1R2H2C2S5a1e2r2h1s3 b2b2 moves	d4f2	94	1	5000
+position fen XcXS1aEXX/S1X2XXXg/3h2s2/AESA1h1XX/XrXe1csXa r b 0 5 0 12 G1R2H2C2S2e1r1s2 b1b1 moves	d3b2	-91	1	5000
+position fen XcXe1aEXC/1SX2XXXg/6s2/AESA1h1aX/XrX2csS1 r b 20 15 0 17 G1R1H2C1S1e1r1s2 h1h1 moves g3g2	a2b1	39	1	5000
+position fen sce2aEXC/S1X2RXXg/1eA6/AES2hSaX/XrH2c3 r b 20 25 0 23 G1H1C1S1r1s1 g1g2 moves	f1f4	20	1	5000
+position fen 1ce2aEXg/s1CA1RsX1/1A1H5/1E3hS1X/XrS3a2 r b 35 40 0 28 G1H1S1r1 c4c4 moves b5a5	f4f2	144	1	5000
+position fen c1A2aEXg/A1C2HsX1/s4R1h1/1E6r/S5r2 r b 45 50 0 34 G1H1 a1a1 moves	h3g5	76	2	5000
+position fen c1A2aEXg/A2E1HCr1/1s3R1h1/6r2/S8 r b 55 55 0 39 G1 e4g4 moves b3c3	f4g2	39	4	5000
+position fen 1AA2aEX1/3E1Rrrg/c1s6/S8/9 r b 75 65 0 45 G1 f2f4 moves	h5h5	1000	4	1763
+position fen 1AA2aEG1/3E2r2/cs3g3/9/S2R3r1 r b 75 65 0 49 - h5h5 moves g4g3 b5a4 f5g4	h5h1	41	4	5000
+position fen 2A3E1G/A2E5/csg2r1a1/9/1S1r5 b b 90 65 0 54 - h1d1 moves b1b2 c3e3 i5i3	d1d4	1000	2	77
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen EGXX1AXXs/hXXX1XSXX/9/cXse1XXXX/rRXX1XXXX b b 0 0 0 6 A1E1R1H2C2S4g1a2e1r1h1c1s3 a5a5 moves	b1a1	149	1	5000
+position fen Er1X1AXXs/hXSX1XSXS/9/cXse1XaXX/R1CX1AXsX r b 20 15 0 11 E1R1H2C1S2g1a1e1h1c1s2 h1h1 moves a2a3 c4c5	d1d1	45	0	5000
+position fen r1SX1AXXs/hX1c1XSXS/5c1a1/RXse1a1XX/2CH1AXsS b b 25 15 0 17 E1R1H1C1S1g1e1h1s2 b5a5 moves	c1b1	-96	0	5000
+position fen 2r2AXRs/RX3XcSS/2h1hc1a1/1XseAH1XX/C5XsS r b 35 20 0 23 E1H1C1g1e1s2 h5h5 moves	g1g1	126	0	5000
+position fen 1r4XRs/RX2AXS1S/2s1h1ca1/1e1e1H1XX/3A2X1s r b 50 40 0 28 E1H1C1g1s2 e2d1 moves e3g2	h5h3	-26	1	5000
+position fen Rr4CRs/1X2AE2S/2s4S1/1ehe1H1Xs/3A2H1s b b 50 55 0 33 g1s1 g5g5 moves f2g4	b5a5	26	3	5000
+position fen R2AH1CR1/1X3E2S/hs4S1s/1e1e3X1/3A2H1s r b 50 75 0 39 g1s1 g4e5 moves a3c2	d1c2	381	3	5000
+position fen 3AH1C2/s4E2S/1s3HSRs/1e1e1g3/h2A4s b b 65 75 0 43 - b4a4 moves h3h5 f2g2 f3d4	g2g3	-82	4	5000
+position fen 3A3R1/1s1H1e2S/1s3HC1s/1e4S2/h2g4s b b 75 75 0 50 - d2d1 moves	d4e2	36	3	5000
+position fen 3A2R2/1s3e2S/2s2HC2/1e3S2s/h2g4s b b 85 75 0 54 - c4b4 moves g5h5 d1e1 f2g2	e1f1	61	3	5000
+position fen 3A3R1/1s2g2S1/3s4C/1e1e3H1/h5S1s r b 85 80 0 60 - f3h2 moves e4g4 h5g5 g4f4	h4g4	-27	4	5000
+position fen 3A3R1/1s2g2S1/3s4C/1e1e3H1/h5S1s r b 85 80 0 60 - f3h2 moves e4g4 h5g5 g4f4 g5h5 a1c2 g1f1 d3e3 d5c4 e3e4 h4h3 e4e5 f1g1 i1i2 g1h1	i2i3	1000	2	75
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XHX2XXsE/SXXXAXXaX/9/rsXX1XXXX/XXXX1SgXX b r 0 0 0 6 G1A1E1R2H1C2S3a1e2r1h2c2s3 a4a4 moves	g1f1	44	1	5000
+position fen XHR2XXRs/rXXXAX2s/9/1sXc1XXXX/XCXX1SgXh r r 5 10 0 12 G1A1E1H1C1S3a1e2r1h1c1s2 a3a4 moves	f1g1	-13	1	5000
+position fen E1R2XHs1/r1XsAX2s/1SH6/s1Xc1XXXX/XCXX1SgSh b r 5 25 0 17 G1A1C1S1a1e2r1h1c1s1 a5a5 moves	g1h1	181	1	5000
+position fen E2R1a1s1/r1XsAX2H/S1H6/s1Xc1XXrX/XCAXSg1Sh b r 10 25 0 21 G1C1S1e2h1c1s1 g5i4 moves d2d3 d5e5 f5g4	e1f1	43	1	5000
+position fen EC1R5/2Xs1X2s/r1HA3a1/s1X2XXrX/X1Ah1S1gh r r 20 45 0 28 G1C1S1e2c1s1 a4a3 moves d3e2	d4d5	327	1	5000
+position fen rC3R3/2esHX2s/4hA1a1/1sX2XXrc/s4S1gh b r 20 55 0 33 G1C1S1e1 c4c4 moves i4h4	f1g1	-381	2	5000
+position fen 1C3R3/2es1X2s/r1H1hA1a1/1sX2Xerc/s4g2h b r 20 60 0 37 G1C1S1 g2g2 moves a3b3 b5b4 f1c1 f3g4	e3f5	534	2	5000
+position fen 9/1Ces1Xa1R/1rH1h4/1sG2Xerc/s1g5h b r 25 65 0 41 C1S1 i5i4 moves d4d3 c3d5 b2b1 i4h4 b3c3 c2b2 c4e2	h4h2	-280	3	5000
+position fen 9/1Ces1Xa1R/1rH1h4/1sG2Xerc/s1g5h b r 25 65 0 41 C1S1 i5i4 moves d4d3 c3d5 b2b1 i4h4 b3c3 c2b2 c4e2 h4i4 e3f5 b4e4 e2c4 d5e3 c1g1 b2b5 b1c1 b5b2 a1b1 e3d1	b1b2	632	3	5000
+position fen 5h3/2e2Xa1R/1rHs3h1/4GXerc/1ss1C4 b r 45 65 0 55 C1S1 e4e1 moves f5e3	e2e3	-336	3	5000
+position fen 1r6R/2e2X3/2Hsh2a1/2G2Cerc/1ss3h1C b r 45 65 0 59 S1 f2f2 moves b5b2 f2f3 d3d4 c3a4	b2c2	380	3	5000
+position fen 8R/H1es1X3/4hC1a1/2r3erc/1ss3h1C r r 45 85 0 62 S1 b2c2 moves f3f2 e3f5 a4c3 b1a1 f2f1 i2i3 f1f3 h2i2 c3e2 f5h4	i1i3	-1000	3	1781
+position fen 9/2es1S3/7aC/2r1R1e1h/s1H4Cr b r 70 85 0 71 - e5e2 moves g2e4 h1g1	c2e2	1000	1	2
+position fen 9/2e1e4/4sS1aC/s1R6/2H2C1r1 b r 95 85 0 76 - i2c2 moves h1g1 f1d1 g1e1	c1a2	1000	1	2
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XX3XXXX/sXXX1XXXX/2c6/XXXX1XCSG/XaXe1XXhX b b 10 0 0 6 A2E2R2H1C1S4g1a1e1r2h1c1s4 c5c3 moves	h2h1	-7	1	5000
+position fen eX3EXXX/sgXX1XXXX/8c/SXXX1X1CG/EaXe1XHSr r b 10 10 0 12 A2R2C1S3a1r1h1c1s4 b4b4 moves	i1i2	86	1	5000
+position fen eX3EXXX/sgXX1XXXX/ce4G2/SAca1X1C1/EaR2XHSr b b 10 10 0 17 A1R1C1S3r1h1s4 d2d2 moves	b2a3	114	1	5000
+position fen eS3EXXX/1gXX1XXsX/se1G5/1Ac2SC2/Eaa2XHSr r b 30 20 0 22 A1R1C1S1r1h1s3 f2f2 moves b3d5 b2c3	i1h1	37	1	5000
+position fen 2S2EXXX/1gXX1hXsX/1ee4H1/1sc2S2C/EaaG1X1Sr b b 35 20 0 27 A1R1C1S1r1s3 f4f4 moves d1d3 f4g2	h3i1	15	1	5000
+position fen 3G1EXSX/1gX3XsX/1ee2S2C/1sc3h2/Eaa2XHSr b b 40 25 0 33 A1R1C1r1s2 h5h5 moves i3i2	i1i2	238	1	5000
+position fen g2G2XSs/2r3XsA/1eeE1S2C/1sca2h2/Ea3XHSr r b 40 25 0 39 R1C1s1 i4i4 moves c2c1	d5a5	-105	2	5000
+position fen 2G3RSC/2r3ssA/3E5/2sa1Sh2/eace1XHr1 b b 50 50 0 44 C1 c3a1 moves d3f5	c4c5	250	3	5000
+position fen 5Es1C/2G3RsA/2e6/a1sa1Sh2/2ceHC1r1 r b 55 65 0 50 - f1f1 moves g2f4	g4f4	152	3	5000
+position fen 4GEs1C/7sA/2ehS4/a1s6/2ceHCRr1 r b 55 70 0 55 - f3e3 moves d1f3 e1g2	h1g1	48	3	5000
+position fen 4GE2s/4S2sA/2eh1e3/a1s3H2/2c2CRr1 b b 65 70 0 57 - h5i5 moves f1e1 h1i1 e5a5 d3f4 g2e3 f4d5 e3g2 d5f4	g2e3	1000	1	67
+position fen 5E2s/4SGs1A/2e6/a1s2h3/2cCH4 r b 80 90 0 67 - g2e1 moves	g4f4	1000	1	2
+position fen 8s/4hGs1A/3E5/a1s6/2cCe4 b b 95 90 0 68 - f2e4 moves i4h5 e4g3 h5i4 c1a1 f4c4 a2b1 c4c5 g3e2	d1a1	1000	1	2
+position fen 8G/6s1A/2hE5/2s6/ca1Ce4 r b 95 95 0 74 - e5i5 moves c2d2 i5a5 d2e2 d3f5 b1a2 d1c1 e2e3 a5b5	c3b5	1000	1	2
+position fen 8G/6s1A/2hE5/2s6/ca1Ce4 r b 95 95 0 74 - e5i5 moves c2d2 i5a5 d2e2 d3f5 b1a2 d1c1 e2e3 a5b5 a1b1 b5d5 c3d1 d5a5 b1b4 c1c4 d1f2 a5a3 b4a4 f5d3 g4h4	a3a4	1000	1	2
+position fen 8G/6s1A/2hE5/2s6/ca1Ce4 r b 95 95 0 74 - e5i5 moves c2d2 i5a5 d2e2 d3f5 b1a2 d1c1 e2e3 a5b5 a1b1 b5d5 c3d1 d5a5 b1b4 c1c4 d1f2 a5a3 b4a4 f5d3 g4h4 c4b4 a2b3 i4h5 h4i4 d3f5 b3c4 a3d3 f2h3 b4b3 i4i5 d3d5	c4d5	1000	1	2
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen SXgX1XXXs/XrXX1XXXX/9/XcXssXXXX/XXXX2RSX b b 0 0 0 6 G1A2E2R1H2C2S3a2e2r1h2c1s2 a5a5 moves	g1f1	-2	1	5000
+position fen SXgX1XXCs/XrCX2XXX/5e3/GcAssAXHX/XXX3RSc r b 0 15 0 12 E2R1H1S3a2e1h2s2 f4c4 moves	i1g1	3	1	5000
+position fen S1gH1X1Rs/arCX2XXX/G3sH3/1cs2AX1X/XXX3RSc b b 20 20 0 17 E2S2a1e1h2s2 d2c2 moves	a1a1	18	0	5000
+position fen Sag1s1HRs/2CX2XhE/G3s1A2/1cH3X1X/XeX2R1Sc r b 20 40 0 23 E1S2a1h1s1 b4c2 moves	i1f1	-50	1	5000
+position fen 1a2s1H1R/S2X2XhE/G1g3A2/2c1s1X1X/aeERH2Sc r b 30 45 0 28 S2h1s1 c1c1 moves c3d3	a3d3	234	1	5000
+position fen 4s3R/S1aX2XAE/G2H1H3/1c2s1s1X/aeER4S b b 30 85 0 32 S2h1 g2g2 moves a3b3 c4d5 a4b4	b2c2	-630	3	5000
+position fen 3a4R/1S1h2XAE/1G1H1H3/c3s2sS/aeER3S1 b b 30 90 0 38 S1 i2i2 moves d3f4 a2a3	c1a3	1000	1	2
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen gXXr1XXXX/ESXX1XXAE/9/XXXC1XerX/XAXX1XXsX b b 0 0 0 6 G1R2H2C1S4a2e1h2c2s4 a4a4 moves	d2d5	99	1	5000
+position fen gXXr1sX1X/ESXX1XaSE/4C4/XXs2Xerh/XAXX1XXsX b b 5 0 0 11 G1R2H2C1S3a1e1h1c2s2 i2i2 moves e3d3	a1a1	41	0	5000
+position fen gXHr1sX1X/1SXX1X1SE/3C3a1/XXE2Xe1h/XAXX1GCsX r b 5 20 0 16 R2H1S3a1e1h1c2s2 c5c5 moves i2g3 d3c3 a5a3	g1g3	142	1	5000
+position fen 1X1r2sSX/1SaXHX2E/g1C4a1/XRE2Xe1c/XAXS1hCs1 r b 25 25 0 23 R1H1S2e1h1c1s1 g5g5 moves	g2e4	103	1	5000
+position fen 1Xr3sSX/S2XHs2E/gRC4a1/H1E2Xe1c/SAhS1hCs1 r b 25 30 0 28 R1S1e1c1 b2b3 moves f1e3	b3a3	217	1	5000
+position fen 1e5sX/S2XHsa1E/CRH1h4/2ESc1e1c/SAC4s1 r b 30 75 0 34 R1S1 b5b5 moves	g2e4	-435	2	5000
+position fen 1Hc4sX/S1hXH1a2/C2R1s3/5SE1c/SAC5s r b 35 85 0 39 R1S1 i4g2 moves i2i4	g2i4	1000	2	200
+position fen 1Hc4sX/S1hXH1a1E/C7c/5s3/SACR4s b b 40 85 0 41 R1S1 f3f2 moves b5c3 c5d5 d1h1 g4f5 a3a2 i1i2 h1e1	f2f3	-548	3	5000
+position fen 3c1as1X/H1hX4E/c2H5/C6s1/SA1CR3s b b 45 85 0 50 R1S1 g3a3 moves	d4d4	1000	4	4382
+position fen 3c1as1X/H2X1H2E/c3h4/C6s1/SA1C4R r b 45 90 0 52 R1S1 e1i1 moves d5c5 d1d3 e3c2 a2b2 a3a2 i1e1 c5c3 a4c5	c2e1	-1000	1	47
+position fen 1CH2as1R/3S4E/3Ch4/c1c3Hs1/SA2R4 r b 45 90 0 60 - d4d4 moves e3d1 d4e4 f5g4	a1a2	1000	1	2
+position fen XXXX1XXXX/XXXX1XXXX/9/XXXX1XXXX/XXXX1XXXX r - 0 0 0 1 G1A2E2R2H2C2S5g1a2e2r2h2c2s5 - moves	d2d2	2	1	5000
+position fen XXXX1XXrX/ShXg1sXXX/9/XsaX1XXXS/XRXX1XsSX b b 0 0 0 6 G1A2E2R1H2C2S2a1e2r1h1c2s2 b1b1 moves	b1b2	41	1	5000
+position fen X1rX1XXrX/ShXg1sXXE/s2e5/2aX1XAXS/XRXX1asSX r b 5 0 0 11 G1A1E1R1H2C2S1e1h1c2s2 i4i4 moves a3a2 g2h3	d3b1	145	1	5000
+position fen Xr1c1XsrX/1SX1gsAXE/7A1/s1aX1X1XS/XeXX1aS1H b b 20 15 0 17 G1E1R1H1C2S1e1h1c1s1 d3b1 moves	b4b5	85	1	5000
+position fen Xr2gXsrX/2Xc1HAXE/1S1e3A1/s1aX1X1XS/s1XX2S2 r b 20 25 0 23 G1E1R1H1C2S1e1h1c1 g2f4 moves	e5e4	-78	1	5000
+position fen Xr2gCsrH/2Sc1HAXE/3e3A1/sS1c1E1XS/sa1e2S2 r b 30 25 0 28 G1R1h1 i5i5 moves e5e3	f5h5	31	1	5000
+position fen X4C2H/2SH2AXE/s2eg2A1/1r1c1E1XS/sa1e2S2 r b 35 55 0 32 G1R1h1 e2d4 moves d3b5 f5g5 a3b3 h3g2	b3b4	-181	2	5000

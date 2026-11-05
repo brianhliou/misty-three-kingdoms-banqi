@@ -1,6 +1,6 @@
-//! The serving contract of the UCI frontend: engine FEN and move text.
+//! The UCI frontend contract: engine FEN and move text.
 //!
-//! The host (for example Mistboard's game server) and `three-kingdoms-engine` must agree on
+//! The host and `three-kingdoms-engine` must agree on
 //! this. The engine never learns a covered tile's identity: every covered square
 //! is `X`, and the `pool` carries only the public per-(ink, role) counts of the
 //! covered tiles, which both seats can derive from the start counts, the
@@ -41,6 +41,8 @@ use crate::{
     code_color, code_role, is_piece, Ink, Move, Seat, State, Status, DOWN, EMPTY, HEIGHT,
     NO_PROGRESS_LIMIT, NSQ, POINTS, START_COUNTS, WIDTH,
 };
+use crate::{engine::Eval, nnue::Net};
+use std::sync::Arc;
 
 const ROLE_LETTERS: [u8; 7] = *b"GAERHCS";
 
@@ -329,7 +331,7 @@ pub fn window<'a>(states: &'a [State], moves: &[Move]) -> (&'a State, Vec<String
 }
 
 /// Name and version the frontend reports (`id name`).
-pub const ENGINE_NAME: &str = "MistyThreeKingdomsBanqi 0.1.0";
+pub const ENGINE_NAME: &str = "MistyThreeKingdomsBanqi 0.2.0";
 
 /// One frontend session: the command loop's state, kept apart from stdin so
 /// tests drive it line by line. A host typically starts one process per move.
@@ -337,6 +339,8 @@ pub const ENGINE_NAME: &str = "MistyThreeKingdomsBanqi 0.1.0";
 pub struct Session {
     position: Option<State>,
     error: Option<String>,
+    eval: Eval,
+    chance_mode: crate::engine::ChanceMode,
 }
 
 impl Session {
@@ -349,6 +353,8 @@ impl Session {
             "uci" => vec![
                 format!("id name {ENGINE_NAME}"),
                 "id author Mistboard".into(),
+                "option name EvalFile type string default <empty>".into(),
+                "option name ChanceMix type check default false".into(),
                 "uciok".into(),
             ],
             "isready" => vec!["readyok".into()],
@@ -365,7 +371,66 @@ impl Session {
                 }
             }
             "go" => self.go(words),
+            "setoption" => self.set_option(line["setoption".len()..].trim()),
             _ => Vec::new(),
+        }
+    }
+
+    fn set_option(&mut self, rest: &str) -> Vec<String> {
+        // Split at tokens rather than spaces: paths may contain spaces, while
+        // UCI permits arbitrary whitespace between the protocol words.
+        let Some(rest) = rest.strip_prefix("name").map(str::trim_start) else {
+            return Vec::new();
+        };
+        let mut end = 0;
+        let mut name = Vec::new();
+        let mut value = "";
+        for word in rest.split_whitespace() {
+            let start = end + rest[end..].find(word).unwrap();
+            end = start + word.len();
+            if word == "value" {
+                value = rest[end..].trim();
+                break;
+            }
+            name.push(word);
+        }
+        let name = name.join(" ");
+        if name.eq_ignore_ascii_case("ChanceMix") {
+            use crate::engine::ChanceMode;
+            self.chance_mode = match value {
+                "true" => ChanceMode::mix(),
+                "false" => ChanceMode::Star1,
+                _ => {
+                    return vec!["info string error ChanceMix: expected true or false".into()];
+                }
+            };
+            return Vec::new();
+        }
+        if !name.eq_ignore_ascii_case("EvalFile") {
+            return Vec::new();
+        }
+        // A failed replacement must never leave the previous net active.
+        self.eval = Eval::Classical;
+        if value.is_empty() || value == "<empty>" {
+            return Vec::new();
+        }
+        match Net::load(value).and_then(|net| {
+            if net.can_quantize() {
+                Ok(net)
+            } else {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "network exceeds safe int16 accumulator range",
+                ))
+            }
+        }) {
+            Ok(net) => {
+                self.eval = Eval::Nnue(Arc::new(net));
+                Vec::new()
+            }
+            Err(error) => vec![format!(
+                "info string error EvalFile: {error}; using classical"
+            )],
         }
     }
 
@@ -397,6 +462,7 @@ impl Session {
         use crate::engine::{SearchConfig, Searcher, LEVEL_MOVETIME_MS};
         use std::time::{Duration, Instant};
         let mut config = SearchConfig::level(None);
+        config.chance_mode = self.chance_mode;
         let mut movetime = LEVEL_MOVETIME_MS;
         let mut allowed = Vec::new();
         while let Some(word) = words.next() {
@@ -428,7 +494,8 @@ impl Session {
             return vec![format!("info string error {why}"), "bestmove (none)".into()];
         };
         let started = Instant::now();
-        let result = Searcher::new(config).search_moves(state, &allowed);
+        let result =
+            Searcher::new(config.with_eval(self.eval.clone())).search_moves(state, &allowed);
         let ms = started.elapsed().as_millis();
         let cp = (result.value * 1000.0).round() as i64;
         let mut info = format!(

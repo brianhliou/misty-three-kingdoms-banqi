@@ -1,10 +1,8 @@
 //! Iterative deepening, alpha-beta, Star1 and capture quiescence, adapted from
 //! MistyBanqi's engine. No Banqi rank values, weights or repetition draws.
 //!
-//! This is the search and evaluation of `reference`, made faster, plus a root
-//! move filter: children skip the legality re-check and read their stored
-//! status, which `tests/candidate.rs` holds node-for-node equal to the
-//! reference search. The playing strength is `LEVEL_*`.
+//! Classical search with ChanceMix off stays node-for-node equal to `reference`.
+//! ChanceMix and NNUE evaluation are opt-in through the search configuration.
 //!
 //! Values are seat-to-move utilities in [-1, 1]. Terminal results are exact;
 //! heuristics stay strictly inside that interval, the global Star1 bounds.
@@ -16,6 +14,7 @@
 //! search is scored by `cycle_value` (see there).
 
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::{
@@ -29,9 +28,7 @@ const MOVEMENT: [f64; 7] = [14.0, 3.0, 4.0, 14.0, 8.0, 10.0, 2.0];
 const MIN: f64 = -1.0;
 const MAX: f64 = 1.0;
 
-/// The one level: the search at the largest budget a live move affords.
-/// Strength is the node budget, so it plays the same on any CPU; the time cap
-/// only bounds latency on a slow host.
+/// The default node budget and latency cap for a move.
 pub const LEVEL_NODES: u64 = 2_000_000;
 pub const LEVEL_MOVETIME_MS: u64 = 8_000;
 pub const LEVEL_MAX_DEPTH: u8 = 64;
@@ -48,6 +45,7 @@ impl SearchConfig {
             quiescence_depth: LEVEL_QUIESCENCE_DEPTH,
             tt_capacity: LEVEL_TT_CAPACITY,
             star1: true,
+            chance_mode: ChanceMode::Star1,
         }
     }
 }
@@ -138,6 +136,61 @@ fn heuristic(state: &State) -> f64 {
     ((margin + 0.35 * movement + 0.15 * mobility) / 135.0).clamp(-0.95, 0.95)
 }
 
+/// Opt-in evaluation; plain SearchConfig remains source compatible and classical.
+#[derive(Clone, Debug, Default)]
+pub enum Eval {
+    #[default]
+    Classical,
+    Nnue(Arc<crate::nnue::Net>),
+    /// Float full-refresh oracle for tests and offline benchmarks.
+    NnueReference(Arc<crate::nnue::Net>),
+}
+impl Eval {
+    pub fn heuristic(&self, state: &State) -> f64 {
+        match self {
+            Self::Classical => heuristic(state),
+            Self::Nnue(net) => net.utility(state),
+            Self::NnueReference(net) => net.utility_reference(state),
+        }
+    }
+    pub fn evaluate(&self, state: &State) -> f64 {
+        terminal(state).unwrap_or_else(|| self.heuristic(state))
+    }
+}
+pub struct EvalConfig {
+    pub search: SearchConfig,
+    pub eval: Eval,
+}
+impl SearchConfig {
+    pub fn with_eval(self, eval: Eval) -> EvalConfig {
+        EvalConfig { search: self, eval }
+    }
+}
+impl From<SearchConfig> for EvalConfig {
+    fn from(search: SearchConfig) -> Self {
+        search.with_eval(Eval::Classical)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ChanceMode {
+    #[default]
+    Star1,
+    Mix {
+        deep: usize,
+        reduction: u8,
+    },
+}
+
+impl ChanceMode {
+    pub const fn mix() -> Self {
+        Self::Mix {
+            deep: 1,
+            reduction: 6,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct SearchConfig {
     /// Completed decision plies; zero requests only the quiescent leaf value.
@@ -150,6 +203,7 @@ pub struct SearchConfig {
     pub tt_capacity: usize,
     /// Disable to compare exhaustive chance enumeration against Star1.
     pub star1: bool,
+    pub chance_mode: ChanceMode,
 }
 
 impl Default for SearchConfig {
@@ -161,6 +215,7 @@ impl Default for SearchConfig {
             quiescence_depth: 4,
             tt_capacity: 32_768,
             star1: true,
+            chance_mode: ChanceMode::Star1,
         }
     }
 }
@@ -235,6 +290,7 @@ struct Entry {
 #[derive(Default)]
 pub struct Searcher {
     pub config: SearchConfig,
+    eval: Eval,
     tt: HashMap<Key, Entry>,
     nodes: u64,
     chance_cutoffs: u64,
@@ -243,14 +299,19 @@ pub struct Searcher {
     root_ply: u32,
     /// Root moves allowed by `search_moves` (UCI `searchmoves`); empty = all.
     root_moves: Vec<Move>,
+    accumulators: Vec<crate::nnue::Accumulator>,
+    #[cfg(test)]
+    unguarded_mix_bound: bool,
 }
 
 type NodeResult = Result<(f64, Option<Move>), ()>;
 
 impl Searcher {
-    pub fn new(config: SearchConfig) -> Self {
+    pub fn new(config: impl Into<EvalConfig>) -> Self {
+        let config = config.into();
         Self {
-            config,
+            config: config.search,
+            eval: config.eval,
             ..Self::default()
         }
     }
@@ -277,7 +338,15 @@ impl Searcher {
         self.tt_hits = 0;
         self.start = Some(Instant::now());
         self.root_ply = state.ply;
-        let value = evaluate(state);
+        if let Eval::Nnue(net) = &self.eval {
+            if net.can_quantize() {
+                let plies =
+                    self.config.max_depth as usize + self.config.quiescence_depth as usize + 2;
+                self.accumulators.resize_with(plies, Default::default);
+                net.refresh(state, &mut self.accumulators[0]);
+            }
+        }
+        let value = terminal(state).unwrap_or_else(|| self.leaf_heuristic(state));
         let finished = terminal(state).is_some();
         let mut result = SearchResult {
             best_move: if finished {
@@ -317,6 +386,32 @@ impl Searcher {
         result
     }
 
+    fn update_accumulator(&mut self, state: &State) {
+        if let Eval::Nnue(net) = &self.eval {
+            if net.can_quantize() {
+                let ply = (state.ply - self.root_ply) as usize;
+                if ply == 0 {
+                    // Root was refreshed before iterative deepening.
+                    return;
+                }
+                let (ancestors, descendants) = self.accumulators.split_at_mut(ply);
+                net.update(&ancestors[ply - 1], state, &mut descendants[0]);
+            }
+        }
+    }
+
+    fn leaf_heuristic(&self, state: &State) -> f64 {
+        if let Eval::Nnue(net) = &self.eval {
+            if net.can_quantize() {
+                return net.utility_accumulator(
+                    &self.accumulators[(state.ply - self.root_ply) as usize],
+                    state.turn(),
+                );
+            }
+        }
+        self.eval.heuristic(state)
+    }
+
     fn tick(&mut self) -> Result<(), ()> {
         if self.nodes >= self.config.node_budget
             || self
@@ -330,13 +425,18 @@ impl Searcher {
         Ok(())
     }
 
-    fn node(
+    fn node(&mut self, state: &State, depth: u8, qleft: u8, alpha: f64, beta: f64) -> NodeResult {
+        self.node_with_probe(state, depth, qleft, alpha, beta, false)
+    }
+
+    fn node_with_probe(
         &mut self,
         state: &State,
         depth: u8,
         qleft: u8,
         mut alpha: f64,
         beta: f64,
+        probe: bool,
     ) -> NodeResult {
         self.tick()?;
         let below_root = state.ply > self.root_ply;
@@ -354,16 +454,23 @@ impl Searcher {
                 return Ok((value, None));
             }
         }
+        self.update_accumulator(state);
         if depth == 0 && qleft == 0 {
-            return Ok((heuristic(state), None));
+            return Ok((self.leaf_heuristic(state), None));
         }
         let original_alpha = alpha;
         let key = (depth > 0 && self.config.tt_capacity > 0).then(|| Key::from(state));
         let mut tt_move = None;
         if let Some(entry) = key.as_ref().and_then(|k| self.tt.get(k)).copied() {
-            tt_move = entry.best;
+            if !probe || matches!(entry.bound, Bound::Exact) {
+                tt_move = entry.best;
+            }
             // Equal depth preserves fixed-horizon values in differential tests.
-            if entry.depth == depth {
+            if if probe {
+                entry.depth >= depth && matches!(entry.bound, Bound::Exact)
+            } else {
+                entry.depth == depth
+            } {
                 self.tt_hits += 1;
                 let usable = match entry.bound {
                     Bound::Exact => true,
@@ -379,7 +486,7 @@ impl Searcher {
         // player MUST act: include quiet moves and flips, with no fictitious pass.
         let stand_pat = depth == 0 && state.no_progress + 1 < crate::NO_PROGRESS_LIMIT;
         let mut best = if stand_pat {
-            heuristic(state)
+            self.leaf_heuristic(state)
         } else {
             f64::NEG_INFINITY
         };
@@ -454,6 +561,9 @@ impl Searcher {
             let child = state.apply_legal(mv, None).expect("generated legal move");
             return Ok(-self.node(&child, next_depth, next_q, -beta, -alpha)?.0);
         }
+        if let ChanceMode::Mix { .. } = self.config.chance_mode {
+            return self.mix_value(state, mv, next_depth, next_q, alpha, beta);
+        }
         let total: u32 = state.bag.iter().sum();
         assert!(total > 0, "covered squares require a nonempty public bag");
         let mut remaining = total;
@@ -494,7 +604,107 @@ impl Searcher {
         }
         Ok(sum.clamp(MIN, MAX))
     }
+
+    fn mix_value(
+        &mut self,
+        state: &State,
+        mv: Move,
+        depth: u8,
+        qleft: u8,
+        alpha: f64,
+        beta: f64,
+    ) -> Result<f64, ()> {
+        let ChanceMode::Mix { deep, reduction } = self.config.chance_mode else {
+            unreachable!()
+        };
+        let total = state.bag.iter().sum::<u32>();
+        assert!(total > 0, "covered squares require a nonempty public bag");
+        let identities = mix_identities(&state.bag);
+        let mut values = [0.0; 14];
+        for &code in &identities {
+            let child = state
+                .apply_legal(mv, Some(code as i16))
+                .expect("public bag outcome");
+            values[code] = -self
+                .node_with_probe(
+                    &child,
+                    depth.saturating_sub(reduction),
+                    qleft,
+                    MIN,
+                    MAX,
+                    true,
+                )?
+                .0;
+        }
+        let mean = |values: &[f64; 14]| {
+            identities
+                .iter()
+                .map(|&code| state.bag[code] as f64 / total as f64 * values[code])
+                .sum::<f64>()
+        };
+        if depth == 0 {
+            return Ok(mean(&values).clamp(MIN, MAX));
+        }
+        let selected = deep.max(1).min(identities.len());
+        let mut sum = identities[selected..]
+            .iter()
+            .map(|&code| state.bag[code] as f64 / total as f64 * values[code])
+            .sum::<f64>();
+        let mut remaining: u32 = identities[..selected]
+            .iter()
+            .map(|&code| state.bag[code])
+            .sum();
+        // Least numerous first, as in jqe cvValue. Pending deep identities
+        // need global bounds, not their probes, until their replacements are exact.
+        for &code in identities[..selected].iter().rev() {
+            remaining -= state.bag[code];
+            let p = state.bag[code] as f64 / total as f64;
+            let rem = remaining as f64 / total as f64;
+            let a = (alpha - sum - rem * MAX) / p;
+            let b = (beta - sum - rem * MIN) / p;
+            if a >= MAX || b <= MIN {
+                self.chance_cutoffs += 1;
+                return Ok(if a >= MAX { alpha } else { beta });
+            }
+            let child = state
+                .apply_legal(mv, Some(code as i16))
+                .expect("public bag outcome");
+            let mut ca = a.max(MIN);
+            let mut cb = b.min(MAX);
+            if ca >= cb {
+                // Mapping a floating-point null window can collapse its width.
+                ca = ca.next_down().max(MIN);
+                cb = cb.next_up().min(MAX);
+            }
+            let value = -self.node(&child, depth, qleft, -cb, -ca)?.0;
+            if value <= ca && a >= MIN {
+                self.chance_cutoffs += 1;
+                #[cfg(test)]
+                if self.unguarded_mix_bound {
+                    // Test-only fault: return the mapped upper bound as a value.
+                    return Ok((sum + p * value + rem * MAX).clamp(MIN, MAX));
+                }
+                return Ok((sum + p * value + rem * MAX).clamp(MIN, MAX).min(alpha));
+            }
+            if value >= cb && b <= MAX {
+                self.chance_cutoffs += 1;
+                return Ok((sum + p * value + rem * MIN).clamp(MIN, MAX).max(beta));
+            }
+            sum += p * value;
+        }
+        Ok(sum.clamp(MIN, MAX))
+    }
 }
+
+fn mix_identities(bag: &[u32; 14]) -> Vec<usize> {
+    let mut identities: Vec<_> = (0..14).filter(|&code| bag[code] > 0).collect();
+    identities.sort_by_key(|&code| (std::cmp::Reverse(bag[code]), code));
+    identities
+}
+
+#[cfg(test)]
+#[path = "chancemix_tests.rs"]
+mod chancemix_tests;
 
 #[cfg(test)]
 mod tests {
@@ -502,7 +712,7 @@ mod tests {
     use crate::Ink;
 
     #[test]
-    fn narrow_star1_bounds_do_not_poison_full_window_tt_results() {
+    fn narrow_bounds_do_not_poison_full_window_tt_results() {
         let mut state = State {
             board: [crate::EMPTY; NSQ],
             bag: [0; 14],
@@ -523,35 +733,46 @@ mod tests {
             quiescence_depth: 0,
             ..SearchConfig::default()
         };
-        let exact = Searcher::new(config.clone()).search(&state).value;
-        for (alpha, beta) in [
-            (-0.9, -0.8),
-            (-0.1, 0.1),
-            (0.8, 0.9),
-            (exact - 0.01, exact + 0.01),
-            (exact, exact + 0.01),
-            (exact - 0.01, exact),
+        for mode in [
+            ChanceMode::Star1,
+            ChanceMode::mix(),
+            ChanceMode::Mix {
+                deep: 2,
+                reduction: 6,
+            },
         ] {
-            let mut searcher = Searcher::new(config.clone());
-            searcher.start = Some(Instant::now());
-            let bound = searcher.node(&state, 3, 0, alpha, beta).unwrap().0;
-            if exact <= alpha {
-                assert!(bound <= alpha + 1e-10);
-            } else if exact >= beta {
-                assert!(bound >= beta - 1e-10);
-            } else {
-                assert!((bound - exact).abs() < 1e-10);
+            let mut config = config.clone();
+            config.chance_mode = mode;
+            let exact = Searcher::new(config.clone()).search(&state).value;
+            for (alpha, beta) in [
+                (-0.9, -0.8),
+                (-0.1, 0.1),
+                (0.8, 0.9),
+                (exact - 0.01, exact + 0.01),
+                (exact, exact + 0.01),
+                (exact - 0.01, exact),
+            ] {
+                let mut searcher = Searcher::new(config.clone());
+                searcher.start = Some(Instant::now());
+                let bound = searcher.node(&state, 3, 0, alpha, beta).unwrap().0;
+                if exact <= alpha {
+                    assert!(bound <= alpha + 1e-10);
+                } else if exact >= beta {
+                    assert!(bound >= beta - 1e-10);
+                } else {
+                    assert!((bound - exact).abs() < 1e-10);
+                }
+                let full = searcher.node(&state, 3, 0, MIN, MAX).unwrap().0;
+                assert!((full - exact).abs() < 1e-10);
+                let before = searcher.nodes;
+                assert_eq!(searcher.node(&state, 3, 0, MIN, MAX).unwrap().0, full);
+                assert_eq!(
+                    searcher.nodes,
+                    before + 1,
+                    "exact TT hit avoids descendants"
+                );
+                assert!(searcher.tt_hits > 0);
             }
-            let full = searcher.node(&state, 3, 0, MIN, MAX).unwrap().0;
-            assert!((full - exact).abs() < 1e-10);
-            let before = searcher.nodes;
-            assert_eq!(searcher.node(&state, 3, 0, MIN, MAX).unwrap().0, full);
-            assert_eq!(
-                searcher.nodes,
-                before + 1,
-                "exact TT hit avoids descendants"
-            );
-            assert!(searcher.tt_hits > 0);
         }
     }
 

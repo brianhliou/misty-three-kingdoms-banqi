@@ -6,7 +6,8 @@
 
 An engine for **Three Kingdoms banqi** (三國暗棋) in Rust: αβ search with **Star1 chance-node
 expectiminimax** for the hidden-tile flips, a transposition table, capture quiescence and a
-handcrafted evaluation. Ships as a small, dependency-free UCI binary.
+handcrafted evaluation, with optional ChanceMix search and NNUE evaluation. Ships as a
+small, dependency-free UCI binary.
 
 Three Kingdoms banqi is a hidden-information game like [Banqi](https://en.wikipedia.org/wiki/Banqi)
 (Chinese Dark Chess), played on a 9x5 board where pieces move like xiangqi pieces and every
@@ -65,22 +66,12 @@ the side ahead wins, the side behind loses, and equal scores draw.
 **Evaluation.** Terminal results (100 points, the 40-ply count, no legal move) are exact utilities
 of -1, 0 and 1. Otherwise the score margin dominates, with smaller terms for remaining movement
 potential (including what the covered bag can still produce) and mobility; heuristic values stay
-inside +/-0.95. The coefficients are new for this game and untuned.
+inside +/-0.95. The coefficients are new for this game and untuned. An optional NNUE
+net can replace the heuristic through UCI `EvalFile`; terminal results still use the rules.
 
-**One level.** The engine plays at 2,000,000 nodes a move with an 8 s time cap that only bounds
-latency on a slow host. Strength is the node budget, so it plays the same on any CPU.
-
-## Strength
-
-There is no human or third-party engine result to quote. What has been measured:
-
-- Over 400 games (200 paired deals, seats swapped), the shipped level scored 84.9% (339 wins, 1
-  draw, 60 losses) against the engine's first search at a 2,000-node budget.
-- That first search, at 2,000 nodes, won 400 of 400 games against a greedy baseline (an immediate
-  win, else the largest capture, else a random flip, else a random move).
-
-The current search is the first one made about three times faster, not changed:
-`tests/candidate.rs` holds the two equal node for node.
+**One level.** The engine plays at 2,000,000 nodes a move with an 8 s time cap that bounds
+latency on a slow host. With ChanceMix off and classical evaluation, `tests/candidate.rs`
+holds the search equal to the frozen reference node for node.
 
 ## Correctness
 
@@ -94,7 +85,7 @@ and two-piece bag, with Star1 and the transposition table each switched on and o
 
 ```sh
 cargo build --release
-echo "uci" | ./target/release/three-kingdoms-engine   # id name MistyThreeKingdomsBanqi 0.1.0
+echo "uci" | ./target/release/three-kingdoms-engine   # id name MistyThreeKingdomsBanqi 0.2.0
 cargo test --release                                  # debug-mode tests are much slower
 ```
 
@@ -104,14 +95,18 @@ Play against it in a terminal (moves as `e3e4`, flip a tile with `e3`):
 cargo run --release --example play -- --seat red --seed 1
 ```
 
+Add `--chance-mix` to enable ChanceMix and `--eval-file <path>` to load a net.
+
 ## UCI protocol
 
 A UCI subset, one process per request or a long-running session. The engine never sees a covered
 tile's identity.
 
 ```
-uci                                          -> id name ..., id author ..., uciok
+uci                                          -> id name ..., id author ..., option ..., uciok
 isready                                      -> readyok
+setoption name ChanceMix value true|false
+setoption name EvalFile value <path>
 ucinewgame
 position startpos [moves m1 m2 ...]
 position fen <FEN> [moves m1 m2 ...]
@@ -125,6 +120,23 @@ Bare `go` plays the level; `movetime 0` removes the time cap (node budget only, 
 `searchmoves` restricts the root to the listed moves. A position the engine refuses, or a finished
 game, answers `info string error <why>` and `bestmove (none)`. `score cp` is the value in
 thousandths of a win, from the side to move.
+
+**ChanceMix** defaults to off (`setoption name ChanceMix value false`). Enable it with
+`setoption name ChanceMix value true`: each flip probes every possible identity at reduced
+depth, then searches the most probable identity at full depth and combines the results by
+their public bag probabilities. The probes reduce depth by six plies, with ties resolved by
+piece code. With the option off, search uses exact Star1 chance enumeration.
+
+**EvalFile** defaults to empty, using classical evaluation. Load an NNUE net with
+`setoption name EvalFile value <path>`; paths may contain spaces and need no quotes.
+The reader accepts **TKNN v1**: a `TKNN` magic header, five little-endian 32-bit integers
+(version 1, 832 features, hidden width 1–4096, 16, 32), then little-endian float32 weights
+in the order documented in `three_kingdoms_banqi_rust/src/nnue.rs`. UCI loading also checks
+that the weights fit the integer accumulator. An empty value or `<empty>` restores classical evaluation; a failed
+load reports `info string error EvalFile: ...; using classical` and clears any previous net.
+Both options persist across `ucinewgame` and can be combined.
+
+Nets are not distributed with the engine.
 
 **Moves** are `<from><to>` on points a1 to i5 (rank 1 at the bottom). A flip has from equal to
 to (`e3e3`).
@@ -168,7 +180,9 @@ bestmove a1b1
 three_kingdoms_banqi_rust/
   src/lib.rs          rules state: move generation, chase rule, results, public FEN
   src/engine.rs       the search and evaluation, and the level
-  src/reference.rs    the first search, frozen; the engine is held equal to it
+  src/features.rs     sparse public-state features for NNUE
+  src/nnue.rs         TKNN v1 reader and incremental evaluation
+  src/reference.rs    the first search, frozen; default search is held equal to it
   src/uci.rs          the UCI contract: FEN parsing, move text, the command session
   src/bin/            the three-kingdoms-engine binary
   tests/              oracle replay, search checks, engine-vs-reference and UCI round trips

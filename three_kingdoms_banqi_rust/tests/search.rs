@@ -37,6 +37,7 @@ fn config(depth: u8) -> SearchConfig {
         quiescence_depth: 0,
         tt_capacity: 4096,
         star1: true,
+        chance_mode: Default::default(),
     }
 }
 

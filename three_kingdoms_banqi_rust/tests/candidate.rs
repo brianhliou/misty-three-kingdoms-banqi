@@ -1,4 +1,4 @@
-//! The engine is the reference search made faster, not changed, and the
+//! With default options the engine matches the frozen reference search, and the
 //! frontend's FEN carries every input the search reads.
 
 use three_kingdoms_banqi_rust::engine::{SearchConfig, Searcher};
@@ -44,6 +44,7 @@ fn games(count: u64) -> Vec<(Vec<State>, Vec<Move>)> {
             quiescence_depth: 2,
             tt_capacity: 1024,
             star1: true,
+            chance_mode: Default::default(),
         });
         let (mut states, mut moves) = (vec![start], Vec::new());
         while matches!(states.last().unwrap().status, Status::Playing(_)) && moves.len() < 300 {
@@ -78,6 +79,7 @@ fn the_candidate_search_is_node_for_node_the_frozen_reference_search() {
                     quiescence_depth: q,
                     tt_capacity: 8192,
                     star1: true,
+                    chance_mode: Default::default(),
                 })
                 .search(state);
                 let old = reference::Searcher::new(reference::SearchConfig {
