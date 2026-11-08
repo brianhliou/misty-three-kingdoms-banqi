@@ -198,7 +198,7 @@ fn advertised_options_validate_values_and_keep_the_previous_mode_on_error() {
     let mut binary = Binary::new();
     let options = binary.ask("uci");
     for line in [
-        "id name MistyThreeKingdomsBanqi 0.2.0",
+        "id name MistyThreeKingdomsBanqi 0.3.0",
         "option name ChanceMix type check default false",
         "option name EvalFile type string default <empty>",
         "uciok",

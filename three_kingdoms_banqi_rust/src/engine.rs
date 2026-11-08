@@ -232,6 +232,130 @@ pub struct SearchResult {
     pub completed: bool,
 }
 
+pub const MAX_NOISE_DEPTH: i32 = 8;
+
+/// Gaussian standard deviation on the native [-1, 1] utility scale.
+/// Zero delegates directly to the original deterministic search.
+#[derive(Clone, Copy, Debug)]
+pub struct PlayOptions {
+    pub noise: f64,
+    /// Library callers may use 0 as an alias for 1; UCI accepts only 1..=8.
+    pub noise_depth: i32,
+}
+
+impl Default for PlayOptions {
+    fn default() -> Self {
+        Self {
+            noise: 0.0,
+            noise_depth: 1,
+        }
+    }
+}
+
+impl PlayOptions {
+    pub fn validate(&self) -> Result<(), &'static str> {
+        if !self.noise.is_finite() || self.noise < 0.0 {
+            return Err("noise must be finite and nonnegative");
+        }
+        if !(0..=MAX_NOISE_DEPTH).contains(&self.noise_depth) {
+            return Err("noise depth must be 0..8");
+        }
+        Ok(())
+    }
+}
+
+/// An independent stream for move noise. Zero is deterministic here;
+/// the UCI caller supplies entropy for Seed=0.
+#[derive(Clone, Debug)]
+pub struct PlayRng(u64);
+
+impl PlayRng {
+    pub fn new(seed: u64) -> Self {
+        Self(seed ^ 0x369dea0f31a53f85)
+    }
+    /// UCI starts a fresh stream per search, salted by the full public state.
+    pub fn for_position(seed: u64, state: &State) -> Self {
+        use std::hash::{Hash, Hasher};
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        Key::from(state).hash(&mut hash);
+        Self::new(seed ^ hash.finish())
+    }
+    fn uniform(&mut self) -> f64 {
+        self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
+        let mut z = self.0;
+        z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+        ((z ^ (z >> 31)) >> 11) as f64 / (1u64 << 53) as f64
+    }
+    fn gaussian(&mut self) -> f64 {
+        let u = 1.0 - self.uniform(); // (0,1], so ln(0) is impossible.
+        let angle = std::f64::consts::TAU * self.uniform();
+        (-2.0 * u.ln()).sqrt() * angle.cos()
+    }
+}
+
+fn move_children(state: &State, mv: Move) -> impl Iterator<Item = State> + '_ {
+    let reveals = if mv.0 == mv.1 {
+        (0..14)
+            .filter(|&c| state.bag[c] > 0)
+            .map(|c| Some(c as i16))
+            .collect()
+    } else {
+        vec![None]
+    };
+    reveals
+        .into_iter()
+        .map(move |reveal| state.apply_legal(mv, reveal).expect("legal public outcome"))
+}
+
+fn wins_in_one(state: &State, mv: Move) -> bool {
+    move_children(state, mv).all(|child| {
+        matches!(child.status,
+        Status::Finished { winner: Some(winner), .. } if winner == state.turn())
+    })
+}
+
+fn unsafe_in_one(state: &State, mv: Move) -> bool {
+    move_children(state, mv).any(|child| match child.status {
+        Status::Finished { winner, .. } => winner == Some(state.turn().other()),
+        Status::Playing(opponent) => child.legal_moves().into_iter().any(|reply| {
+            // Any winning reveal of an opponent flip makes the root unsafe.
+            move_children(&child, reply).any(|next| {
+                matches!(next.status,
+                Status::Finished { winner: Some(winner), .. } if winner == opponent)
+            })
+        }),
+    })
+}
+
+/// Immediate terminal guards use seats, public reveals and the rules.
+/// A flip must win under every reveal and is unsafe under any losing reveal.
+/// If every candidate is unsafe, retain all of them.
+pub fn guarded_root_moves(state: &State) -> Vec<Move> {
+    guard_candidates(state, state.legal_moves())
+}
+
+fn guard_candidates(state: &State, legal: Vec<Move>) -> Vec<Move> {
+    let wins: Vec<_> = legal
+        .iter()
+        .copied()
+        .filter(|&mv| wins_in_one(state, mv))
+        .collect();
+    if !wins.is_empty() {
+        return wins;
+    }
+    let safe: Vec<_> = legal
+        .iter()
+        .copied()
+        .filter(|&mv| !unsafe_in_one(state, mv))
+        .collect();
+    if safe.is_empty() {
+        legal
+    } else {
+        safe
+    }
+}
+
 /// Equality-checked keys preserve every rule input, including the clock, the
 /// chased square and the positions since the last flip or capture (they decide
 /// which chases are legal and which nodes are cycles). Capture order and absolute
@@ -326,26 +450,7 @@ impl Searcher {
     /// `search`, choosing only among `allowed` at the root (the tree below is
     /// not filtered). An empty list, or one with no legal move, searches all.
     pub fn search_moves(&mut self, state: &State, allowed: &[Move]) -> SearchResult {
-        let legal = state.legal_moves();
-        self.root_moves = legal
-            .iter()
-            .copied()
-            .filter(|mv| allowed.contains(mv))
-            .collect();
-        self.tt.clear();
-        self.nodes = 0;
-        self.chance_cutoffs = 0;
-        self.tt_hits = 0;
-        self.start = Some(Instant::now());
-        self.root_ply = state.ply;
-        if let Eval::Nnue(net) = &self.eval {
-            if net.can_quantize() {
-                let plies =
-                    self.config.max_depth as usize + self.config.quiescence_depth as usize + 2;
-                self.accumulators.resize_with(plies, Default::default);
-                net.refresh(state, &mut self.accumulators[0]);
-            }
-        }
+        let legal = self.prepare(state, allowed, self.config.max_depth);
         let value = terminal(state).unwrap_or_else(|| self.leaf_heuristic(state));
         let finished = terminal(state).is_some();
         let mut result = SearchResult {
@@ -380,6 +485,130 @@ impl Searcher {
                 }
             }
         }
+        result.nodes = self.nodes;
+        result.chance_cutoffs = self.chance_cutoffs;
+        result.tt_hits = self.tt_hits;
+        result
+    }
+
+    fn prepare(&mut self, state: &State, allowed: &[Move], max_depth: u8) -> Vec<Move> {
+        let legal = state.legal_moves();
+        self.root_moves = legal
+            .iter()
+            .copied()
+            .filter(|mv| allowed.contains(mv))
+            .collect();
+        self.tt.clear();
+        self.nodes = 0;
+        self.chance_cutoffs = 0;
+        self.tt_hits = 0;
+        self.start = Some(Instant::now());
+        self.root_ply = state.ply;
+        if let Eval::Nnue(net) = &self.eval {
+            if net.can_quantize() {
+                let plies = max_depth as usize + self.config.quiescence_depth as usize + 2;
+                self.accumulators.resize_with(plies, Default::default);
+                net.refresh(state, &mut self.accumulators[0]);
+            }
+        }
+        legal
+    }
+
+    /// Every root, including flips, receives an independent Gaussian draw,
+    /// reused at each scoring depth. Depth one completes without limits;
+    /// subsequent passes share the caller's total node/time limits.
+    /// Incomplete passes are discarded. Immediate terminal guards precede
+    /// scoring, and +/-1 search values take precedence over noise. These
+    /// values include cycle settlements, so they are not general proofs.
+    pub fn select_move_with_options(
+        &mut self,
+        state: &State,
+        allowed: &[Move],
+        play: &PlayOptions,
+        rng: &mut PlayRng,
+    ) -> SearchResult {
+        play.validate().expect("invalid PlayOptions");
+        if play.noise == 0.0 || terminal(state).is_some() {
+            return self.search_moves(state, allowed);
+        }
+        let started = Instant::now();
+        let depth = play.noise_depth.max(1) as u8;
+        let mut moves = self.prepare(state, allowed, depth);
+        let candidates = if self.root_moves.is_empty() {
+            moves.clone()
+        } else {
+            self.root_moves.clone()
+        };
+        let guarded = guard_candidates(state, candidates);
+        let mut result = SearchResult {
+            best_move: guarded.first().copied(),
+            value: 0.0,
+            completed_depth: 0,
+            nodes: 0,
+            chance_cutoffs: 0,
+            tt_hits: 0,
+            completed: true,
+        };
+        if wins_in_one(state, guarded[0]) {
+            result.value = MAX;
+            return result;
+        }
+        // Same stable initial ordering as normal search, without a TT hint.
+        moves.sort_by_cached_key(|&mv| {
+            let capture = mv.0 != mv.1 && is_piece(state.board[mv.1 as usize]);
+            let points = if capture {
+                POINTS[code_role(state.board[mv.1 as usize])]
+            } else {
+                0
+            };
+            std::cmp::Reverse((capture, points, mv.0 == mv.1))
+        });
+        let noise: Vec<_> = moves.iter().map(|_| rng.gaussian()).collect();
+        let config = self.config.clone();
+        self.start = Some(started); // Include guard and setup time in the deadline.
+        for d in 1..=depth {
+            self.tt.clear(); // No shallower bounds alter a fixed-depth pass.
+            self.config.node_budget = if d == 1 { u64::MAX } else { config.node_budget };
+            self.config.time_limit = if d == 1 { None } else { config.time_limit };
+            let mut scores = Vec::with_capacity(moves.len());
+            for &mv in &moves {
+                match self.move_value(state, mv, d, config.quiescence_depth, MIN, MAX) {
+                    Ok(value) => scores.push(value),
+                    Err(()) => break,
+                }
+            }
+            if scores.len() != moves.len() {
+                result.completed = false;
+                break;
+            }
+            let has_win = moves
+                .iter()
+                .zip(&scores)
+                .any(|(mv, &v)| guarded.contains(mv) && v == MAX);
+            let has_nonloss = moves
+                .iter()
+                .zip(&scores)
+                .any(|(mv, &v)| guarded.contains(mv) && v > MIN);
+            let mut best_noisy = f64::NEG_INFINITY;
+            for ((&mv, &v), &z) in moves.iter().zip(&scores).zip(&noise) {
+                if !guarded.contains(&mv) || (has_win && v != MAX) || (has_nonloss && v == MIN) {
+                    continue;
+                }
+                // Normalize large finite sigma to avoid overflow.
+                let noisy = if play.noise >= 1.0 {
+                    v / play.noise + z
+                } else {
+                    v + play.noise * z
+                };
+                if noisy > best_noisy {
+                    result.best_move = Some(mv);
+                    result.value = v;
+                    best_noisy = noisy;
+                }
+            }
+            result.completed_depth = d;
+        }
+        self.config = config;
         result.nodes = self.nodes;
         result.chance_cutoffs = self.chance_cutoffs;
         result.tt_hits = self.tt_hits;
@@ -710,6 +939,21 @@ mod chancemix_tests;
 mod tests {
     use super::*;
     use crate::Ink;
+
+    #[test]
+    fn gaussian_is_replayable_centered_and_unit_variance() {
+        let (mut a, mut b) = (PlayRng::new(123), PlayRng::new(123));
+        let (mut sum, mut squares) = (0.0, 0.0);
+        for _ in 0..100_000 {
+            let z = a.gaussian();
+            assert_eq!(z.to_bits(), b.gaussian().to_bits());
+            assert!(z.is_finite());
+            sum += z;
+            squares += z * z;
+        }
+        assert!((sum / 100_000.0).abs() < 0.015);
+        assert!((squares / 100_000.0 - 1.0).abs() < 0.025);
+    }
 
     #[test]
     fn narrow_bounds_do_not_poison_full_window_tt_results() {

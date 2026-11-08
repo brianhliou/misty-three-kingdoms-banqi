@@ -2,6 +2,19 @@
 
 All notable changes to MistyThreeKingdomsBanqi.
 
+## [0.3.0]
+
+- UCI `Noise`, `NoiseDepth` and `Seed` options for weaker play. Positive Noise
+  adds Gaussian noise to every root move's utility, including flips, with a
+  scoring horizon of 1 to 8 plies and replayable nonzero seeds.
+- Immediate terminal wins take priority; moves that allow an immediate loss
+  under any reveal are excluded unless every move is unsafe. Deeper scoring
+  passes share node/time limits and retain the last complete pass, after a
+  mandatory depth-one pass. Noise=0 preserves the original search unchanged.
+- Library and UCI tests cover terminal guards, seeded replay, both chance modes,
+  generated NNUE nets, budgets and zero-noise bestmove/score/depth/nodes parity.
+  The package and UCI engine name now report 0.3.0.
+
 ## [0.2.0]
 
 - Optional ChanceMix search (`setoption name ChanceMix value true`, default off):

@@ -331,7 +331,7 @@ pub fn window<'a>(states: &'a [State], moves: &[Move]) -> (&'a State, Vec<String
 }
 
 /// Name and version the frontend reports (`id name`).
-pub const ENGINE_NAME: &str = "MistyThreeKingdomsBanqi 0.2.0";
+pub const ENGINE_NAME: &str = "MistyThreeKingdomsBanqi 0.3.0";
 
 /// One frontend session: the command loop's state, kept apart from stdin so
 /// tests drive it line by line. A host typically starts one process per move.
@@ -341,6 +341,8 @@ pub struct Session {
     error: Option<String>,
     eval: Eval,
     chance_mode: crate::engine::ChanceMode,
+    play: crate::engine::PlayOptions,
+    seed: u64,
 }
 
 impl Session {
@@ -355,6 +357,9 @@ impl Session {
                 "id author Mistboard".into(),
                 "option name EvalFile type string default <empty>".into(),
                 "option name ChanceMix type check default false".into(),
+                "option name Noise type string default 0".into(),
+                "option name NoiseDepth type spin default 1 min 1 max 8".into(),
+                "option name Seed type string default 0".into(),
                 "uciok".into(),
             ],
             "isready" => vec!["readyok".into()],
@@ -395,6 +400,36 @@ impl Session {
             name.push(word);
         }
         let name = name.join(" ");
+        if name.eq_ignore_ascii_case("Noise") {
+            if let Ok(noise) = value.parse::<f64>() {
+                let play = crate::engine::PlayOptions { noise, ..self.play };
+                if play.validate().is_ok() {
+                    self.play = play;
+                    return Vec::new();
+                }
+            }
+            return vec!["info string invalid or unknown option".into()];
+        }
+        if name.eq_ignore_ascii_case("NoiseDepth") {
+            if let Ok(noise_depth) = value.parse::<i32>() {
+                let play = crate::engine::PlayOptions {
+                    noise_depth,
+                    ..self.play
+                };
+                if noise_depth >= 1 && play.validate().is_ok() {
+                    self.play = play;
+                    return Vec::new();
+                }
+            }
+            return vec!["info string invalid or unknown option".into()];
+        }
+        if name.eq_ignore_ascii_case("Seed") {
+            if let Ok(seed) = value.parse::<u64>() {
+                self.seed = seed;
+                return Vec::new();
+            }
+            return vec!["info string invalid or unknown option".into()];
+        }
         if name.eq_ignore_ascii_case("ChanceMix") {
             use crate::engine::ChanceMode;
             self.chance_mode = match value {
@@ -494,8 +529,28 @@ impl Session {
             return vec![format!("info string error {why}"), "bestmove (none)".into()];
         };
         let started = Instant::now();
-        let result =
-            Searcher::new(config.with_eval(self.eval.clone())).search_moves(state, &allowed);
+        let mut searcher = Searcher::new(config.with_eval(self.eval.clone()));
+        let result = if self.play.noise == 0.0 {
+            searcher.search_moves(state, &allowed)
+        } else {
+            // Seed=0 requests fresh noise on each search. Sample entropy only
+            // when noise is enabled; nonzero seeds replay the public position.
+            let seed = if self.seed == 0 {
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_nanos() as u64)
+                    .unwrap_or(1)
+                    .max(1)
+            } else {
+                self.seed
+            };
+            searcher.select_move_with_options(
+                state,
+                &allowed,
+                &self.play,
+                &mut crate::engine::PlayRng::for_position(seed, state),
+            )
+        };
         let ms = started.elapsed().as_millis();
         let cp = (result.value * 1000.0).round() as i64;
         let mut info = format!(

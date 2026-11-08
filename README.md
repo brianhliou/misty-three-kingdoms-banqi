@@ -85,7 +85,7 @@ and two-piece bag, with Star1 and the transposition table each switched on and o
 
 ```sh
 cargo build --release
-echo "uci" | ./target/release/three-kingdoms-engine   # id name MistyThreeKingdomsBanqi 0.2.0
+echo "uci" | ./target/release/three-kingdoms-engine   # id name MistyThreeKingdomsBanqi 0.3.0
 cargo test --release                                  # debug-mode tests are much slower
 ```
 
@@ -107,6 +107,9 @@ uci                                          -> id name ..., id author ..., opti
 isready                                      -> readyok
 setoption name ChanceMix value true|false
 setoption name EvalFile value <path>
+setoption name Noise value <sigma>
+setoption name NoiseDepth value <1..8>
+setoption name Seed value <u64>
 ucinewgame
 position startpos [moves m1 m2 ...]
 position fen <FEN> [moves m1 m2 ...]
@@ -134,9 +137,65 @@ The reader accepts **TKNN v1**: a `TKNN` magic header, five little-endian 32-bit
 in the order documented in `three_kingdoms_banqi_rust/src/nnue.rs`. UCI loading also checks
 that the weights fit the integer accumulator. An empty value or `<empty>` restores classical evaluation; a failed
 load reports `info string error EvalFile: ...; using classical` and clears any previous net.
-Both options persist across `ucinewgame` and can be combined.
+All options persist across `ucinewgame` and can be combined.
 
 Nets are not distributed with the engine.
+
+## Weaker play
+
+The engine advertises these additional UCI options:
+
+```text
+option name Noise type string default 0
+option name NoiseDepth type spin default 1 min 1 max 8
+option name Seed type string default 0
+```
+
+**Noise** is a finite, nonnegative Gaussian standard deviation on the engine's
+**[-1, 1] utility scale**. For example, `0.1` corresponds to 100 displayed cp.
+Larger values make score differences less influential. These values describe
+score noise, not calibrated playing strengths. With `Noise=0`, the engine calls
+the original search: bestmove, score, depth, node counts and deterministic ties
+stay unchanged for any Seed or NoiseDepth.
+
+Positive Noise scores every legal root move, including flips, with full utility
+windows and the configured evaluation, capture quiescence and Star1/ChanceMix
+search. It adds an independent Gaussian draw to each move's score and plays the
+highest eligible noisy score. The reported `info` score is the selected move's
+original utility. Even a tiny positive sigma uses this shallower search.
+
+Before scoring, the engine takes a guaranteed terminal win in one. Otherwise it
+excludes moves for which any reveal lets the opponent win immediately, including
+a winning reveal of an opponent flip. If every move is unsafe, all stay eligible.
+In each complete scoring pass, +1 scores take priority and -1 scores are excluded
+when another eligible move scores above -1. Search scores include the cycle
+settlement model and ChanceMix's reduced reveal horizons, so these scores do not
+prove a forced result in general. Existing `searchmoves` restrictions apply.
+
+**NoiseDepth** sets the scoring horizon from 1 to 8 decision plies, independently
+of `go depth`. Noisy play always completes depth one, which can exceed tiny node
+or time limits. Deeper passes share the total `go nodes` budget and `movetime`
+deadline, including setup and guard time. An interrupted pass keeps the last
+complete pass's choice; reported nodes include aborted work. Each pass starts
+with a fresh transposition table and reuses the same noise draws.
+
+**Seed** accepts an unsigned 64-bit integer. A nonzero seed replays the same move
+for the same public position and options when elapsed time does not interrupt
+search. `Seed=0` supplies fresh entropy per search. A time limit can change the
+last completed depth with host scheduling. These settings persist across
+`ucinewgame` and EvalFile resets.
+
+For example:
+
+```text
+setoption name Noise value 0.15
+setoption name NoiseDepth value 2
+setoption name Seed value 123
+position startpos
+go nodes 10000 movetime 0
+```
+
+## Position format
 
 **Moves** are `<from><to>` on points a1 to i5 (rank 1 at the bottom). A flip has from equal to
 to (`e3e3`).
