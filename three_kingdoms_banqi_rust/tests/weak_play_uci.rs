@@ -91,7 +91,7 @@ fn advertises_exact_contract_and_validates_without_replacing_options() {
     );
     assert!(s
         .handle("uci")
-        .contains(&"id name MistyThreeKingdomsBanqi 0.3.0".into()));
+        .contains(&"id name MistyThreeKingdomsBanqi 0.3.1".into()));
     for line in [
         "setoption name Noise value 0.3",
         "setoption name NoiseDepth value 2",

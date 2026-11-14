@@ -88,7 +88,7 @@ and two-piece bag, with Star1 and the transposition table each switched on and o
 
 ```sh
 cargo build --release
-echo "uci" | ./target/release/three-kingdoms-engine   # id name MistyThreeKingdomsBanqi 0.3.0
+echo "uci" | ./target/release/three-kingdoms-engine   # id name MistyThreeKingdomsBanqi 0.3.1
 cargo test --release                                  # debug-mode tests are much slower
 ```
 

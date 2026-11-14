@@ -2,7 +2,7 @@
 
 All notable changes to MistyThreeKingdomsBanqi.
 
-## [0.3.1] (unreleased)
+## [0.3.1]
 
 - Fix #1: repeated positions continue through search rather than receiving an
   immediate settlement value. Move generation still refuses a chase's third

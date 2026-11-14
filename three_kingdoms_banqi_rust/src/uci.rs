@@ -331,7 +331,7 @@ pub fn window<'a>(states: &'a [State], moves: &[Move]) -> (&'a State, Vec<String
 }
 
 /// Name and version the frontend reports (`id name`).
-pub const ENGINE_NAME: &str = "MistyThreeKingdomsBanqi 0.3.0";
+pub const ENGINE_NAME: &str = "MistyThreeKingdomsBanqi 0.3.1";
 
 /// One frontend session: the command loop's state, kept apart from stdin so
 /// tests drive it line by line. A host typically starts one process per move.
