@@ -216,7 +216,19 @@ impl Net {
 }
 
 fn utility(logit: f32) -> f64 {
-    (2.0 / (1.0 + (-(logit as f64)).exp()) - 1.0).clamp(-0.95, 0.95)
+    // Preserve the sigmoid's ordering in winning positions. Only guard against
+    // floating-point saturation: exact +/-1 belongs to terminal settlements.
+    const LIMIT: f64 = 1.0 - f64::EPSILON;
+    (2.0 / (1.0 + (-(logit as f64)).exp()) - 1.0).clamp(-LIMIT, LIMIT)
+}
+
+/// A small public-score term keeps saturated network outputs sensitive to
+/// captures. Both components stay inside the terminal settlement bounds.
+pub(crate) fn with_score_tiebreak(value: f64, state: &State) -> f64 {
+    let seat = state.turn();
+    let margin = state.scores[seat as usize] as f64 - state.scores[seat.other() as usize] as f64;
+    let score = (margin / 100.0).clamp(-0.95, 0.95);
+    0.95 * value + 0.05 * score
 }
 
 pub const MAX_HIDDEN: usize = 4096;
@@ -311,6 +323,39 @@ fn dot(input: &[i8], weights: &[i8]) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn winning_utilities_keep_their_order_inside_settlement_bounds() {
+        for sign in [-1.0, 1.0] {
+            let values = [4.0, 5.0, 10.0, 20.0].map(|logit| sign * utility(sign as f32 * logit));
+            for pair in values.windows(2) {
+                assert!(pair[0] < pair[1], "flattened utilities: {values:?}");
+            }
+            for logit in [0.0, 4.0, 20.0, 100.0, f32::MAX] {
+                let value = utility(sign as f32 * logit);
+                assert!(value > -1.0 && value < 1.0, "{logit}: {value}");
+            }
+        }
+    }
+
+    #[test]
+    fn saturated_network_scores_still_prefer_captures_for_both_seats() {
+        let mut state = State::initial();
+        state.scores = [40, 0];
+        let before = with_score_tiebreak(utility(100.0), &state);
+        state.scores[0] += 10;
+        let captured = with_score_tiebreak(utility(100.0), &state);
+        assert!(captured > before);
+        assert!(captured < 1.0);
+
+        state.ply += 1;
+        let lost = with_score_tiebreak(utility(-100.0), &state);
+        state.scores[0] -= 10;
+        let saved = with_score_tiebreak(utility(-100.0), &state);
+        assert!(lost < saved);
+        assert!(lost > -1.0);
+    }
+
     #[test]
     fn planted_missing_clock_delta_is_detected() {
         // Test-only hook corrupts the target feature set before delta update.
@@ -413,7 +458,7 @@ mod tests {
             (net.utility_reference(&State::initial()) - (2. / (1. + (-0.5f64).exp()) - 1.)).abs()
                 < 1e-6
         );
-        // Opt-in search leaf and zero-node fallback use the net; terminal/cycle
+        // Opt-in search leaf and zero-node fallback use the net; terminal
         // values continue to come from the rules, independent of this eval.
         use crate::engine::{Eval, SearchConfig, Searcher};
         let eval = Eval::Nnue(std::sync::Arc::new(net));
@@ -442,7 +487,8 @@ mod tests {
         clock.scores[0] = 5;
         assert_eq!(eval.evaluate(&clock), 1.);
         clock.history = vec![clock.position_key(); 2];
-        assert_eq!(crate::engine::cycle_value(&clock), Some(1.));
+        assert_eq!(crate::engine::cycle_value(&clock), None);
+        assert_eq!(eval.evaluate(&clock), 1.);
         for offset in [0, 4, 8, 16, 20] {
             let mut bad = bytes.clone();
             bad[offset] ^= 1;

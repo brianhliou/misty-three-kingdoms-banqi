@@ -2,6 +2,17 @@
 
 All notable changes to MistyThreeKingdomsBanqi.
 
+## [0.3.1] (unreleased)
+
+- Fix #1: repeated positions continue through search rather than receiving an
+  immediate settlement value. Move generation still refuses a chase's third
+  occurrence under Mistboard's rules, with the existing only-move exception.
+- Widen NNUE's sigmoid utility range below the exact settlement bounds and
+  blend in 5% public score margin so winning moves retain useful ordering even
+  when network activations saturate.
+- Regressions cover the reported chase, the third-occurrence restriction,
+  utility ordering and bounds, and the L8 `c3a5` move with an external tk-v17q net.
+
 ## [0.3.0]
 
 - UCI `Noise`, `NoiseDepth` and `Seed` options for weaker play. Positive Noise

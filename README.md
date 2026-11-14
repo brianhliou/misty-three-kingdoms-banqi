@@ -56,18 +56,21 @@ with iterative deepening, capture and hash move ordering, capture quiescence and
 transposition table. A stopped iteration never replaces the last complete one, and a deterministic
 legal fallback covers a budget too small to finish depth one.
 
-**Repetition, scored the way the clock would settle it.** The perpetual-chase rule depends on
+**Repetition continues normally.** The perpetual-chase rule depends on
 history, so the chased square, the positions since the last flip or capture, and the last move are
 all part of the search state and the transposition key. Every searched move comes from the rules'
-own legal-move list, so a refused chase is never searched. A position that repeats below the root
-is scored as the 40-ply count would end it: with no capture or flip the scores cannot change, so
-the side ahead wins, the side behind loses, and equal scores draw.
+own legal-move list, so a refused chase is never searched. A repeated position has no special
+search value. Play continues until an actual terminal result; the no-progress count settles
+the game on score only when it reaches 40 plies.
 
 **Evaluation.** Terminal results (100 points, the 40-ply count, no legal move) are exact utilities
 of -1, 0 and 1. Otherwise the score margin dominates, with smaller terms for remaining movement
 potential (including what the covered bag can still produce) and mobility; heuristic values stay
 inside +/-0.95. The coefficients are new for this game and untuned. An optional NNUE
-net can replace the heuristic through UCI `EvalFile`; terminal results still use the rules.
+net can replace the heuristic through UCI `EvalFile`; its sigmoid utilities preserve ordering
+beyond +/-0.95 while staying strictly inside +/-1. Search blends 95% NNUE utility
+with 5% normalized public score margin to distinguish saturated network outputs.
+Terminal results still use the rules.
 
 **One level.** The engine plays at 2,000,000 nodes a move with an 8 s time cap that bounds
 latency on a slow host. With ChanceMix off and classical evaluation, `tests/candidate.rs`
@@ -88,6 +91,15 @@ cargo build --release
 echo "uci" | ./target/release/three-kingdoms-engine   # id name MistyThreeKingdomsBanqi 0.3.0
 cargo test --release                                  # debug-mode tests are much slower
 ```
+
+The issue #1 L8 move regression uses the separately distributed tk-v17q net:
+
+```sh
+BANQI_TEST_NET=/path/to/v17q.tknn cargo test --release --test search \
+  issue_1_strongest_search_saves_the_attacked_piece -- --ignored
+```
+
+The ordinary suite tests utility ordering and settlement bounds without a net file.
 
 Play against it in a terminal (moves as `e3e4`, flip a tile with `e3`):
 
@@ -168,8 +180,8 @@ Before scoring, the engine takes a guaranteed terminal win in one. Otherwise it
 excludes moves for which any reveal lets the opponent win immediately, including
 a winning reveal of an opponent flip. If every move is unsafe, all stay eligible.
 In each complete scoring pass, +1 scores take priority and -1 scores are excluded
-when another eligible move scores above -1. Search scores include the cycle
-settlement model and ChanceMix's reduced reveal horizons, so these scores do not
+when another eligible move scores above -1. Search scores include
+ChanceMix's reduced reveal horizons, so these scores do not
 prove a forced result in general. Existing `searchmoves` restrictions apply.
 
 **NoiseDepth** sets the scoring horizon from 1 to 8 decision plies, independently

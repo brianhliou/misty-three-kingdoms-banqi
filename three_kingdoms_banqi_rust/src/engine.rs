@@ -10,8 +10,8 @@
 //! square, position history and last move), never a deal or the lossy public FEN.
 //! Every move comes from `State::legal_moves`, so a chase the repetition rule
 //! refuses is never searched and the only-legal-move exception is the rules'
-//! own. Repetition never draws in this game; a position that repeats inside the
-//! search is scored by `cycle_value` (see there).
+//! own. Repetition has no special search value (`cycle_value` returns `None`):
+//! play continues until the rules produce an actual terminal result.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -84,30 +84,12 @@ fn stored_terminal(state: &State) -> Option<f64> {
     }
 }
 
-/// Value of a position the search reached again (it already occurred in the
-/// current window, i.e. since the last flip or capture), for the seat to move.
-///
-/// Three Kingdoms banqi has no repetition draw. If both sides keep to a cycle,
-/// no flip or capture happens, the scores cannot change, and the 40-ply clock
-/// ends the game on the score margin: the side ahead wins, equal scores draw.
-/// So a cycle is scored exactly as that clock settlement, from the side to
-/// move's margin, the way a chess search scores a repetition as the draw it
-/// would become. A side that would lose the settlement breaks the cycle at an
-/// earlier node (with a flip, a capture or a fresh square) if it can. Which
-/// chases may enter a cycle is movegen's call, never this function's. Never
-/// applied at the search root, which is searched whatever its history.
-pub fn cycle_value(state: &State) -> Option<f64> {
-    if state.occurrences(&state.position_key()) < 2 {
-        return None;
-    }
-    let seat = state.turn();
-    let mine = state.scores[seat as usize];
-    let theirs = state.scores[seat.other() as usize];
-    Some(match mine.cmp(&theirs) {
-        std::cmp::Ordering::Greater => MAX,
-        std::cmp::Ordering::Less => MIN,
-        std::cmp::Ordering::Equal => 0.0,
-    })
+/// Repetition supplies no special search value in Three Kingdoms banqi.
+/// Play continues until an actual terminal result, including the 40-ply
+/// no-progress settlement. Move generation alone enforces the chase limit.
+/// Kept as a public hook for callers that check for cycle adjudication.
+pub fn cycle_value(_state: &State) -> Option<f64> {
+    None
 }
 
 fn heuristic(state: &State) -> f64 {
@@ -149,8 +131,10 @@ impl Eval {
     pub fn heuristic(&self, state: &State) -> f64 {
         match self {
             Self::Classical => heuristic(state),
-            Self::Nnue(net) => net.utility(state),
-            Self::NnueReference(net) => net.utility_reference(state),
+            Self::Nnue(net) => crate::nnue::with_score_tiebreak(net.utility(state), state),
+            Self::NnueReference(net) => {
+                crate::nnue::with_score_tiebreak(net.utility_reference(state), state)
+            }
         }
     }
     pub fn evaluate(&self, state: &State) -> f64 {
@@ -518,8 +502,8 @@ impl Searcher {
     /// reused at each scoring depth. Depth one completes without limits;
     /// subsequent passes share the caller's total node/time limits.
     /// Incomplete passes are discarded. Immediate terminal guards precede
-    /// scoring, and +/-1 search values take precedence over noise. These
-    /// values include cycle settlements, so they are not general proofs.
+    /// scoring, and +/-1 search values take precedence over noise. Only
+    /// actual terminal results can produce these settlement bounds.
     pub fn select_move_with_options(
         &mut self,
         state: &State,
@@ -632,10 +616,11 @@ impl Searcher {
     fn leaf_heuristic(&self, state: &State) -> f64 {
         if let Eval::Nnue(net) = &self.eval {
             if net.can_quantize() {
-                return net.utility_accumulator(
+                let value = net.utility_accumulator(
                     &self.accumulators[(state.ply - self.root_ply) as usize],
                     state.turn(),
                 );
+                return crate::nnue::with_score_tiebreak(value, state);
             }
         }
         self.eval.heuristic(state)

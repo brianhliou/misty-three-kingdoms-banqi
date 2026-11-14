@@ -9,6 +9,7 @@ use std::{
 use three_kingdoms_banqi_rust::{
     engine::{ChanceMode, Eval, Searcher},
     nnue::Net,
+    reference,
     uci::{self, move_to_uci},
     State, DOWN,
 };
@@ -117,17 +118,50 @@ fn expected(command: &str, eval: Eval, chance_mode: ChanceMode) -> ResultFields 
 }
 
 #[test]
-fn default_and_explicit_false_match_all_200_public_010_fixtures() {
+fn default_and_explicit_false_preserve_010_fixtures_except_corrected_repetitions() {
+    // Keep the historical 0.1.0 fixture immutable. These four positions used
+    // the incorrect cycle-settlement shortcut in their search trees (#1).
+    // Check them against the corrected independent reference; every other
+    // position must retain its exact historical UCI output.
+    const REPETITION_AFFECTED: [usize; 4] = [81, 103, 104, 167];
     let mut binary = Binary::new();
     for explicit in [false, true] {
         if explicit {
             binary.position("setoption name ChanceMix value true");
             binary.position("setoption name ChanceMix value false");
         }
-        for (command, baseline) in fixtures() {
+        for (index, (command, baseline)) in fixtures().into_iter().enumerate() {
+            let expected = if REPETITION_AFFECTED.contains(&index) {
+                let config = common::config();
+                let corrected = reference::Searcher::new(reference::SearchConfig {
+                    max_depth: config.max_depth,
+                    node_budget: config.node_budget,
+                    time_limit: config.time_limit,
+                    quiescence_depth: config.quiescence_depth,
+                    tt_capacity: config.tt_capacity,
+                    star1: config.star1,
+                })
+                .search(&parse(command));
+                let corrected = (
+                    corrected
+                        .best_move
+                        .map(move_to_uci)
+                        .unwrap_or("(none)".into()),
+                    (corrected.value * 1000.0).round() as i64,
+                    corrected.completed_depth,
+                    corrected.nodes,
+                );
+                assert_ne!(
+                    corrected, baseline,
+                    "unneeded repetition exception: {index}"
+                );
+                corrected
+            } else {
+                baseline
+            };
             binary.position("ucinewgame");
             binary.position(command);
-            assert_eq!(result(binary.ask(GO)), baseline, "{command}");
+            assert_eq!(result(binary.ask(GO)), expected, "{command}");
         }
     }
 }

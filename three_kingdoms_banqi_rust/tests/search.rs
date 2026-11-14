@@ -25,6 +25,63 @@ fn search_takes_the_hundred_point_win() {
     assert_eq!(result.value, 1.0);
 }
 
+#[test]
+fn issue_1_repeated_chase_is_not_a_settlement() {
+    use three_kingdoms_banqi_rust::{reference, uci};
+
+    let state = uci::parse_position(
+        "X1XX1sXSX/XXAX2R1X/1R4A2/X1X1G1XEX/XXSX1XeXX r r 15 0 0 12 E1H2C2S3g1a2r2h2c2s2 f5f5",
+        &["e2f2", "f5e5", "f2e2", "e5f5"],
+    )
+    .unwrap();
+    let chase = uci::uci_to_move("e2f2").unwrap();
+    let child = state.apply(chase, None).unwrap();
+    assert_eq!(child.occurrences(&child.position_key()), 2);
+    let result = Searcher::new(config(1)).search_moves(&state, &[chase]);
+    assert!(result.completed);
+    assert!(result.value.abs() < 1.0, "{result:?}");
+    assert_eq!(cycle_value(&child), None);
+    assert_eq!(reference::cycle_value(&child), None);
+
+    // The next lap would make this chase's resulting position occur a third
+    // time. Refuse the move in movegen, without inventing a terminal result.
+    let mut third = child;
+    for text in ["f5e5", "f2e2", "e5f5"] {
+        third = third.apply(uci::uci_to_move(text).unwrap(), None).unwrap();
+    }
+    assert!(third.forbidden_chase_moves().contains(&chase));
+    assert!(!third.legal_moves().contains(&chase));
+    assert!(matches!(third.result(), Status::Playing(_)));
+}
+
+// The production weights are distributed separately, not in this MIT repo.
+// BANQI_TEST_NET=/path/to/v17q.tknn cargo test --release --test search \
+//     issue_1_strongest_search_saves_the_attacked_piece -- --ignored
+#[test]
+#[ignore = "requires the external tk-v17q net in BANQI_TEST_NET"]
+fn issue_1_strongest_search_saves_the_attacked_piece() {
+    use std::sync::Arc;
+    use three_kingdoms_banqi_rust::{
+        engine::{ChanceMode, Eval},
+        nnue::Net,
+        uci,
+    };
+
+    let net =
+        Arc::new(Net::load(std::env::var_os("BANQI_TEST_NET").expect("BANQI_TEST_NET")).unwrap());
+    let state = uci::parse_engine_fen(
+        "c2X1RXSX/XS1X2R1X/2EA5/X1X1G1SEX/1SSX1XAXh r r 40 0 0 23 H2C2g1a2r1h1c1s2 a5a5",
+    )
+    .unwrap();
+    // Mistboard L8: ChanceMix, NNUE, 2,048,000 nodes. Remove the wall-clock
+    // cap so a busy host cannot change the completed iteration or best move.
+    let mut cfg = SearchConfig::level(None);
+    cfg.node_budget = 2_048_000;
+    cfg.chance_mode = ChanceMode::mix();
+    let result = Searcher::new(cfg.with_eval(Eval::Nnue(net))).search(&state);
+    assert_eq!(result.best_move, uci::uci_to_move("c3a5"), "{result:?}");
+}
+
 use std::time::Duration;
 use three_kingdoms_banqi_rust::engine::{cycle_value, evaluate, SearchConfig};
 use three_kingdoms_banqi_rust::{Reason, Seat, Status, DOWN, NO_PROGRESS_LIMIT, POINTS};
@@ -42,21 +99,11 @@ fn config(depth: u8) -> SearchConfig {
 }
 
 // Independent, unpruned expectimax. Every legal move and every nonzero bag
-// entry is visited; no production chance helper, pruning or cache is used. A
-// position repeated below the root is settled as the 40-ply clock would settle
-// it, recomputed here from the scores rather than through the engine.
+// entry is visited; no production chance helper, pruning or cache is used.
+// Repetition continues normally; only the rules can settle a position.
 fn expectimax(state: &State, depth: u8) -> f64 {
-    expectimax_below(state, depth, state.ply)
-}
-
-fn expectimax_below(state: &State, depth: u8, root_ply: u32) -> f64 {
     if matches!(state.result(), Status::Finished { .. }) {
         return evaluate(state);
-    }
-    if state.ply > root_ply && state.occurrences(&state.position_key()) >= 2 {
-        let seat = state.turn() as usize;
-        return (state.scores[seat] as f64 - state.scores[1 - seat] as f64).signum()
-            * f64::from(u8::from(state.scores[0] != state.scores[1]));
     }
     if depth == 0 {
         return evaluate(state);
@@ -66,7 +113,7 @@ fn expectimax_below(state: &State, depth: u8, root_ply: u32) -> f64 {
         .into_iter()
         .map(|mv| {
             if mv.0 != mv.1 {
-                -expectimax_below(&state.apply(mv, None).unwrap(), depth - 1, root_ply)
+                -expectimax(&state.apply(mv, None).unwrap(), depth - 1)
             } else {
                 let total = state.bag.iter().sum::<u32>() as f64;
                 state
@@ -76,11 +123,7 @@ fn expectimax_below(state: &State, depth: u8, root_ply: u32) -> f64 {
                     .filter(|&(_, &n)| n > 0)
                     .map(|(code, &n)| {
                         -(n as f64) / total
-                            * expectimax_below(
-                                &state.apply(mv, Some(code as i16)).unwrap(),
-                                depth - 1,
-                                root_ply,
-                            )
+                            * expectimax(&state.apply(mv, Some(code as i16)).unwrap(), depth - 1)
                     })
                     .sum()
             }
@@ -238,25 +281,30 @@ fn search_takes_chase_legality_from_movegen() {
 }
 
 #[test]
-fn repetition_is_never_a_draw_and_a_cycle_settles_by_score_margin() {
+fn repetition_continues_until_the_actual_clock_settlement() {
     let cycle = [(0, 1), (44, 43), (1, 0), (43, 44)];
-    for (scores, settled) in [([20, 15], 1.0), ([15, 20], -1.0), ([20, 20], 0.0)] {
+    for scores in [[20, 15], [15, 20], [20, 20]] {
         let mut state = playing(&[(0, 6), (44, 13)]);
         state.scores = scores;
         for mv in cycle {
             state = state.apply(mv, None).unwrap();
         }
-        // Red to move in a position seen twice: the clock would settle it.
+        // Red to move in a position seen twice: no adjudication yet, even
+        // when the score margin is nonzero.
         assert_eq!(state.occurrences(&state.position_key()), 2);
-        assert_eq!(cycle_value(&state), Some(settled));
+        assert_eq!(cycle_value(&state), None);
+        assert_eq!(
+            three_kingdoms_banqi_rust::reference::cycle_value(&state),
+            None
+        );
         assert_eq!(state.status, Status::Playing(Seat::Red));
         assert_value(&state, 3);
         let fresh = playing(&[(0, 6), (44, 13)]);
         assert_eq!(cycle_value(&fresh), None);
     }
 
-    // Ahead, red can re-enter the cycle (b1 was seen once), so a shallow search
-    // finds the clock win long before the clock runs (clock 4 of 40).
+    // Ahead, red can re-enter the cycle, but a shallow search cannot claim a
+    // clock win long before the clock runs (clock 4 of 40).
     let mut ahead = playing(&[(0, 6), (44, 13)]);
     ahead.scores = [20, 15];
     for mv in cycle {
@@ -264,7 +312,7 @@ fn repetition_is_never_a_draw_and_a_cycle_settles_by_score_margin() {
     }
     assert_eq!(ahead.no_progress, 4);
     let result = Searcher::new(config(2)).search(&ahead);
-    assert_eq!(result.value, 1.0);
+    assert!(result.value.abs() < 1.0, "{result:?}");
 
     // The root itself is searched whatever its history: nine laps in, the clock
     // reaches 40 inside a depth-4 search and red wins on score.
